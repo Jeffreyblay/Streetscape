@@ -1,0 +1,22 @@
+# ArcGIS Pro lock files (created while a layer is open)
+*.lock
+*.sr.lock
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+.ipynb_checkpoints/
+
+# Secrets (Cesium ion token goes in .env later)
+.env
+.env.*
+
+# Web app (added in Phase 1)
+node_modules/
+dist/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
