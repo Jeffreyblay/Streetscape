@@ -11,6 +11,7 @@ __pycache__/
 # Secrets (Cesium ion token goes in .env later)
 .env
 .env.*
+!.env.example
 
 # Web app (added in Phase 1)
 node_modules/
