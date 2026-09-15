@@ -108,6 +108,60 @@
 }
 .viewer-status.error { color: var(--danger); }
 
+/* Viewer toolbar */
+.toolbar {
+  position: absolute;
+  top: 0.75rem;
+  left: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  z-index: 1;
+}
+.toolbar-hint {
+  padding: 0.4rem 0.8rem;
+  border-radius: 6px;
+  background: #16212ccc;
+  font-size: 0.85rem;
+}
+.btn, .btn-small, .chip {
+  font: inherit;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  cursor: pointer;
+}
+.btn { padding: 0.45rem 0.9rem; font-size: 0.875rem; font-weight: 600; box-shadow: 0 2px 8px #0006; }
+.btn:hover, .btn-small:hover, .chip:hover { border-color: var(--accent); }
+.btn.ghost { background: #16212ccc; font-weight: 400; }
+.btn-small { padding: 0.2rem 0.55rem; font-size: 0.75rem; }
+.cesium-container.mode-picking { cursor: crosshair; }
+.cesium-container.mode-street { cursor: grab; }
+.cesium-container.mode-street:active { cursor: grabbing; }
+
+/* Street view card */
+.street-card { border-color: #3a96d688; }
+.street-depth { margin: 0.5rem 0; color: var(--muted); font-size: 0.85rem; }
+.street-depth .big { color: var(--text); font-size: 1.5rem; font-weight: 700; margin-right: 0.25rem; }
+.street-depth .level { display: block; color: var(--accent); font-weight: 600; margin-top: 0.1rem; }
+.gauge { width: 100%; height: auto; display: block; margin: 0.25rem 0; }
+.gauge-person { fill: #8b9bab; }
+.gauge-water { fill: #3a96d6; opacity: 0.55; }
+.gauge-eye { stroke: #ffe14d; stroke-width: 1.5; stroke-dasharray: 4 3; }
+.gauge-ground { stroke: #8b9bab; stroke-width: 2; }
+.gauge-label { font-size: 10px; fill: var(--muted); }
+.gauge-label.water { fill: #7cc0ee; }
+.gauge-label.eye { fill: #ffe14d; }
+.warn { color: var(--danger); font-size: 0.8rem; margin: 0.25rem 0; }
+.slider { display: block; margin-top: 0.5rem; font-size: 0.8rem; color: var(--muted); }
+.slider strong { color: var(--text); }
+.slider input { width: 100%; accent-color: var(--accent); margin-top: 0.3rem; }
+.presets { display: flex; flex-wrap: wrap; gap: 0.35rem; margin-top: 0.4rem; }
+.chip { padding: 0.15rem 0.55rem; font-size: 0.75rem; border-radius: 999px; }
+.chip.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+.hint.small { margin-top: 0.6rem; font-size: 0.72rem; }
+
 .viewer { grid-area: viewer; position: relative; min-height: 0; }
 .cesium-container { position: absolute; inset: 0; }
 

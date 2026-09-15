@@ -1,4 +1,5 @@
 import Controls from './Controls.jsx'
+import StreetViewCard from './StreetViewCard.jsx'
 
 function Stat({ label, value, unit }) {
   return (
@@ -59,6 +60,7 @@ export default function StatsPanel({
   onClearBuilding,
   layers,
   onLayersChange,
+  street,
   error,
 }) {
   if (error) return <aside className="panel"><p className="error">{error}</p></aside>
@@ -68,6 +70,7 @@ export default function StatsPanel({
 
   return (
     <aside className="panel">
+      {street && <StreetViewCard {...street} />}
       {building && <BuildingCard building={building} onClose={onClearBuilding} />}
 
       <section>

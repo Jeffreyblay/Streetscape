@@ -3,6 +3,8 @@ import * as Cesium from 'cesium'
 import 'cesium/Build/Cesium/Widgets/widgets.css'
 import { addBuildings, addFloodOverlay, buildingInfo, BUILDING_COLORS } from '../cesium/layers.js'
 import { addWaterSurface, WATER_ANIMATION_SPEED } from '../cesium/water.js'
+import { StreetView } from '../cesium/streetView.js'
+import { loadDepthGrid } from '../data/depthGrid.js'
 
 Cesium.Ion.defaultAccessToken = import.meta.env.VITE_CESIUM_TOKEN
 
@@ -31,19 +33,28 @@ export default function CesiumViewer({
   showWater = true,
   animateWater = true,
   showDepthColors = true,
+  mode = 'aerial', // 'aerial' | 'picking' | 'street'
+  streetPosition = null,
+  eyeHeight = 1.7,
+  onPickLocation,
 }) {
   const containerRef = useRef(null)
   const viewerRef = useRef(null)
   const buildingsRef = useRef(null)
   const waterRef = useRef(null)
   const overlayLayerRef = useRef(null)
+  const streetViewRef = useRef(null)
   const showDepthColorsRef = useRef(showDepthColors)
+  const eyeHeightRef = useRef(eyeHeight)
+  const modeRef = useRef(mode)
   const onSelectRef = useRef(onSelectBuilding)
+  const onPickRef = useRef(onPickLocation)
   const [waterStatus, setWaterStatus] = useState('loading')
 
   useEffect(() => {
     onSelectRef.current = onSelectBuilding
-  }, [onSelectBuilding])
+    onPickRef.current = onPickLocation
+  }, [onSelectBuilding, onPickLocation])
 
   // Create the viewer and load buildings + water once; destroy on unmount
   useEffect(() => {
@@ -69,8 +80,11 @@ export default function CesiumViewer({
       if (!viewer.isDestroyed()) buildingsRef.current = source
     })
 
-    fetch('/data/depth_grid.json')
-      .then((r) => r.json())
+    streetViewRef.current = new StreetView(viewer)
+    // Dev-only handle for debugging in the browser console (stripped from production builds)
+    if (import.meta.env.DEV) window.__streetscape = { viewer, streetView: streetViewRef.current, Cesium }
+
+    loadDepthGrid()
       .then((grid) => addWaterSurface(viewer, grid))
       .then((primitive) => {
         if (!primitive || viewer.isDestroyed()) return
@@ -82,18 +96,34 @@ export default function CesiumViewer({
         if (!viewer.isDestroyed()) setWaterStatus('error')
       })
 
-    // Click a building to select it; click elsewhere to clear.
-    // Highlighting is handled by the selectedId effect below.
+    // Click a building (any mode) to select it. Otherwise:
+    //   aerial  -> clear selection
+    //   picking -> enter street view at the clicked ground point
+    //   street  -> walk to the clicked ground point
+    // (A drag doesn't count as a click, so drag-to-look won't trigger a walk.)
     const handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas)
     handler.setInputAction(({ position }) => {
       const picked = viewer.scene.pick(position)
       const entity = picked?.id instanceof Cesium.Entity ? picked.id : null
-      const isBuilding = entity && buildingsRef.current?.entities.contains(entity)
-      onSelectRef.current?.(isBuilding ? buildingInfo(entity) : null)
+      if (entity && buildingsRef.current?.entities.contains(entity)) {
+        onSelectRef.current?.(buildingInfo(entity))
+        return
+      }
+      if (modeRef.current === 'aerial') {
+        onSelectRef.current?.(null)
+        return
+      }
+      // Ground point under the cursor, ignoring water and buildings
+      const ground = viewer.scene.globe.pick(viewer.camera.getPickRay(position), viewer.scene)
+      if (!ground) return
+      const c = Cesium.Cartographic.fromCartesian(ground)
+      onPickRef.current?.({ lon: Cesium.Math.toDegrees(c.longitude), lat: Cesium.Math.toDegrees(c.latitude) })
     }, Cesium.ScreenSpaceEventType.LEFT_CLICK)
 
     return () => {
       handler.destroy()
+      streetViewRef.current?.destroy()
+      streetViewRef.current = null
       viewer.destroy()
       viewerRef.current = null
       buildingsRef.current = null
@@ -136,6 +166,20 @@ export default function CesiumViewer({
     if (water) water.appearance.material.uniforms.animationSpeed = animateWater ? WATER_ANIMATION_SPEED : 0
   }, [animateWater, waterStatus])
 
+  // Street view: follow mode/position from App
+  useEffect(() => {
+    modeRef.current = mode
+    const sv = streetViewRef.current
+    if (!sv) return
+    if (mode === 'street' && streetPosition) sv.goTo(streetPosition, eyeHeightRef.current)
+    else if (mode === 'aerial') sv.exit()
+  }, [mode, streetPosition])
+
+  useEffect(() => {
+    eyeHeightRef.current = eyeHeight
+    streetViewRef.current?.setEyeHeight(eyeHeight)
+  }, [eyeHeight])
+
   // Keep the 3D highlight in sync with the selection in App
   useEffect(() => {
     const source = buildingsRef.current
@@ -148,7 +192,7 @@ export default function CesiumViewer({
 
   return (
     <>
-      <div ref={containerRef} className="cesium-container" />
+      <div ref={containerRef} className={`cesium-container mode-${mode}`} />
       {showWater && waterStatus !== 'ready' && (
         <div className={`viewer-status ${waterStatus}`}>
           {waterStatus === 'loading' ? 'Building water surface…' : 'Water surface failed to load (see console)'}
