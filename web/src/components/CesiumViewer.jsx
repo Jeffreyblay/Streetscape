@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 import * as Cesium from 'cesium'
 import 'cesium/Build/Cesium/Widgets/widgets.css'
+import { addBuildings, addFloodOverlay, buildingInfo, BUILDING_COLORS } from '../cesium/layers.js'
 
 Cesium.Ion.defaultAccessToken = import.meta.env.VITE_CESIUM_TOKEN
 
@@ -15,11 +16,23 @@ function flyToStudyArea(viewer, bounds) {
   })
 }
 
-export default function CesiumViewer({ bounds }) {
+function setBuildingColor(entity, highlighted) {
+  const { flooded } = buildingInfo(entity)
+  entity.polygon.material = highlighted
+    ? BUILDING_COLORS.selected
+    : flooded ? BUILDING_COLORS.flooded : BUILDING_COLORS.dry
+}
+
+export default function CesiumViewer({ overlay, selectedId, onSelectBuilding }) {
   const containerRef = useRef(null)
   const viewerRef = useRef(null)
+  const buildingsRef = useRef(null)
+  const onSelectRef = useRef(onSelectBuilding)
+  useEffect(() => {
+    onSelectRef.current = onSelectBuilding
+  }, [onSelectBuilding])
 
-  // Create the viewer once; destroy it on unmount (Cesium manages its own render loop)
+  // Create the viewer and load buildings once; destroy on unmount
   useEffect(() => {
     const viewer = new Cesium.Viewer(containerRef.current, {
       terrain: Cesium.Terrain.fromWorldTerrain(),
@@ -35,15 +48,56 @@ export default function CesiumViewer({ bounds }) {
       selectionIndicator: false,
     })
     viewerRef.current = viewer
+
+    addBuildings(viewer).then((source) => {
+      if (!viewer.isDestroyed()) buildingsRef.current = source
+    })
+
+    // Click a building to select it; click elsewhere to clear.
+    // Highlighting is handled by the selectedId effect below.
+    const handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas)
+    handler.setInputAction(({ position }) => {
+      const picked = viewer.scene.pick(position)
+      const entity = picked?.id instanceof Cesium.Entity ? picked.id : null
+      const isBuilding = entity && buildingsRef.current?.entities.contains(entity)
+      onSelectRef.current?.(isBuilding ? buildingInfo(entity) : null)
+    }, Cesium.ScreenSpaceEventType.LEFT_CLICK)
+
     return () => {
+      handler.destroy()
       viewer.destroy()
       viewerRef.current = null
+      buildingsRef.current = null
     }
   }, [])
 
+  // Keep the 3D highlight in sync with the selection in App
   useEffect(() => {
-    if (viewerRef.current && bounds) flyToStudyArea(viewerRef.current, bounds)
-  }, [bounds])
+    const source = buildingsRef.current
+    if (!source || selectedId == null) return
+    const entity = source.entities.values.find((e) => buildingInfo(e).id === selectedId)
+    if (!entity) return
+    setBuildingColor(entity, true)
+    return () => setBuildingColor(entity, false)
+  }, [selectedId])
+
+  // Overlay metadata arrives after the fetch in App: drape it and fly there
+  useEffect(() => {
+    const viewer = viewerRef.current
+    if (!viewer || !overlay) return
+    let layer = null
+    let cancelled = false
+    addFloodOverlay(viewer, overlay).then((l) => {
+      if (viewer.isDestroyed()) return
+      if (cancelled) viewer.imageryLayers.remove(l)
+      else layer = l
+    })
+    flyToStudyArea(viewer, overlay.bounds)
+    return () => {
+      cancelled = true
+      if (layer && !viewer.isDestroyed()) viewer.imageryLayers.remove(layer)
+    }
+  }, [overlay])
 
   return <div ref={containerRef} className="cesium-container" />
 }

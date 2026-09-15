@@ -8,6 +8,7 @@ const hasToken = Boolean(import.meta.env.VITE_CESIUM_TOKEN)
 export default function App() {
   const [stats, setStats] = useState(null)
   const [overlay, setOverlay] = useState(null)
+  const [building, setBuilding] = useState(null)
   const [error, setError] = useState(null)
 
   // Load the prepared data (served from data/processed by vite.config.js)
@@ -29,10 +30,16 @@ export default function App() {
         <h1>Streetscape</h1>
         <span className="subtitle">Flood depth · eastern North Carolina</span>
       </header>
-      <StatsPanel stats={stats} error={error} />
+      <StatsPanel
+        stats={stats}
+        overlay={overlay}
+        building={building}
+        onClearBuilding={() => setBuilding(null)}
+        error={error}
+      />
       <main className="viewer">
         {hasToken ? (
-          <CesiumViewer bounds={overlay?.bounds} />
+          <CesiumViewer overlay={overlay} selectedId={building?.id} onSelectBuilding={setBuilding} />
         ) : (
           <p className="error pad">
             No Cesium token found. Add VITE_CESIUM_TOKEN to web/.env and restart <code>npm run dev</code>.
