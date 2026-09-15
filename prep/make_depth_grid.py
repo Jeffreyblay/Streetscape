@@ -1,5 +1,5 @@
 """
-Step 6b of the data pipeline: downsampled depth grid for the web app.
+Step 6b of the data pipeline: downsampled depth grid (~12.5 ft cells) for the web app.
 
 Used for:
   - point queries ("depth where you're standing") without a server
@@ -27,7 +27,7 @@ DEPTH = ROOT / "data" / "raster" / "depth.tif"
 OUT = ROOT / "data" / "processed" / "depth_grid.json"
 DST_CRS = "EPSG:4326"
 
-CELL_M = 7.62           # ~25 ft target cell size
+CELL_M = 3.81           # ~12.5 ft target cell size (fine enough for smooth shorelines)
 MIN_WET_FRACTION = 0.5  # coarse cell counts as wet only if >= half its area is wet
 FT_TO_M = 0.3048
 

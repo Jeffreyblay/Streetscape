@@ -12,12 +12,14 @@ export async function addFloodOverlay(viewer, overlay) {
   const provider = await Cesium.SingleTileImageryProvider.fromUrl(`/data/${overlay.image}`, {
     rectangle: Cesium.Rectangle.fromDegrees(west, south, east, north),
   })
+  if (viewer.isDestroyed()) return null
   return viewer.imageryLayers.addImageryProvider(provider)
 }
 
 /** Load footprints and extrude them, sitting on Cesium's terrain. */
 export async function addBuildings(viewer) {
   const source = await Cesium.GeoJsonDataSource.load('/data/buildings.geojson')
+  if (viewer.isDestroyed()) return null // React dev mode may unmount before loading finishes
 
   for (const entity of source.entities.values) {
     const props = entity.properties

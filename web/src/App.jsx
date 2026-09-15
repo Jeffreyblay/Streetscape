@@ -9,6 +9,7 @@ export default function App() {
   const [stats, setStats] = useState(null)
   const [overlay, setOverlay] = useState(null)
   const [building, setBuilding] = useState(null)
+  const [layers, setLayers] = useState({ showWater: true, animateWater: true, showDepthColors: true })
   const [error, setError] = useState(null)
 
   // Load the prepared data (served from data/processed by vite.config.js)
@@ -35,11 +36,18 @@ export default function App() {
         overlay={overlay}
         building={building}
         onClearBuilding={() => setBuilding(null)}
+        layers={layers}
+        onLayersChange={setLayers}
         error={error}
       />
       <main className="viewer">
         {hasToken ? (
-          <CesiumViewer overlay={overlay} selectedId={building?.id} onSelectBuilding={setBuilding} />
+          <CesiumViewer
+            overlay={overlay}
+            selectedId={building?.id}
+            onSelectBuilding={setBuilding}
+            {...layers}
+          />
         ) : (
           <p className="error pad">
             No Cesium token found. Add VITE_CESIUM_TOKEN to web/.env and restart <code>npm run dev</code>.

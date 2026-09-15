@@ -1,3 +1,5 @@
+import Controls from './Controls.jsx'
+
 function Stat({ label, value, unit }) {
   return (
     <div className="stat">
@@ -50,7 +52,15 @@ function BuildingCard({ building, onClose }) {
   )
 }
 
-export default function StatsPanel({ stats, overlay, building, onClearBuilding, error }) {
+export default function StatsPanel({
+  stats,
+  overlay,
+  building,
+  onClearBuilding,
+  layers,
+  onLayersChange,
+  error,
+}) {
   if (error) return <aside className="panel"><p className="error">{error}</p></aside>
   if (!stats) return <aside className="panel"><p className="muted">Loading stats…</p></aside>
 
@@ -83,6 +93,8 @@ export default function StatsPanel({ stats, overlay, building, onClearBuilding, 
         <Stat label="Area" value={inundated_area.acres.toFixed(0)} unit="acres" />
         <Stat label="" value={inundated_area.km2.toFixed(2)} unit="km²" />
       </section>
+
+      <Controls layers={layers} onChange={onLayersChange} />
 
       {!building && <p className="hint">Click a building to see its flood depth.</p>}
     </aside>

@@ -84,6 +84,30 @@
 }
 .hint { margin-top: 1.5rem; font-size: 0.8rem; color: var(--muted); font-style: italic; }
 
+.toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.3rem 0;
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+.toggle input { accent-color: var(--accent); cursor: pointer; }
+.toggle.disabled { opacity: 0.45; cursor: default; }
+
+.viewer-status {
+  position: absolute;
+  top: 0.75rem;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 0.35rem 0.8rem;
+  border-radius: 999px;
+  background: #16212ccc;
+  font-size: 0.8rem;
+  pointer-events: none;
+}
+.viewer-status.error { color: var(--danger); }
+
 .viewer { grid-area: viewer; position: relative; min-height: 0; }
 .cesium-container { position: absolute; inset: 0; }
 
