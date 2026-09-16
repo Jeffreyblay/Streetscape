@@ -22,6 +22,7 @@ function flyToStudyArea(viewer, bounds) {
   })
 }
 
+// Colours a building: yellow when selected, otherwise red if flooded and orange if dry.
 function setBuildingColor(entity, highlighted) {
   const { flooded } = buildingInfo(entity)
   entity.polygon.material = highlighted

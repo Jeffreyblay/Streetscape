@@ -48,6 +48,7 @@ def zonal_depth(geom, src):
 
 
 def main():
+    """Adds flood depth to every building and writes the files the web app reads."""
     bldgs = gpd.read_file(BUILDINGS)
 
     with rasterio.open(DEPTH) as src:

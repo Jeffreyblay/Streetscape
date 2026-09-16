@@ -30,6 +30,7 @@ def r2(x):
 
 
 def main():
+    """Works out the summary numbers and the depth histogram for the panel."""
     with rasterio.open(DEPTH) as src:
         wet = src.read(1, masked=True).compressed()  # wet cells only
         cell_w, cell_h = src.res                     # feet (EPSG:2264)

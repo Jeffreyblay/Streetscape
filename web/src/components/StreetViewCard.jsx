@@ -54,6 +54,7 @@ function WaterGauge({ depth, eyeHeight }) {
   )
 }
 
+// The street view panel: depth here, the gauge, the height slider and the exit button.
 export default function StreetViewCard({ depth, eyeHeight, onEyeHeightChange, onExit }) {
   const d = depth ?? 0
   const underwater = eyeHeight < d

@@ -13,6 +13,7 @@ const LOOKAHEAD = 0.015 // fraction of the path used to aim the camera
  * through the waypoints instead of turning in steps.
  */
 export class Tour {
+  // Starts with no path and nothing playing.
   constructor(viewer) {
     this.viewer = viewer
     this.spline = null
@@ -47,10 +48,12 @@ export class Tour {
     )
   }
 
+  // True once the flight path has been built.
   get ready() {
     return this.spline !== null
   }
 
+  // Starts flying, saving the current camera so it can be put back later.
   start() {
     if (!this.ready || this.playing) return
     const { camera, scene } = this.viewer
@@ -66,6 +69,7 @@ export class Tour {
     scene.preRender.addEventListener(this._tick)
   }
 
+  // Stops moving but stays where it is.
   pause() {
     if (!this.playing) return
     this.viewer.scene.preRender.removeEventListener(this._tick)
@@ -84,11 +88,13 @@ export class Tour {
     }
   }
 
+  // Detaches the per-frame updates.
   destroy() {
     if (this._tick) this.viewer.scene.preRender.removeEventListener(this._tick)
     this._tick = null
   }
 
+  // Runs every frame: moves a little further along the path, and finishes at the end.
   #frame() {
     const now = performance.now()
     const dt = this._lastTime ? Math.min((now - this._lastTime) / 1000, 0.1) : 0
@@ -105,6 +111,7 @@ export class Tour {
     this.#place(this.t)
   }
 
+  // Puts the camera at one point along the path, facing forwards and leaning into turns.
   #place(t) {
     const position = this.spline.evaluate(t)
     const ahead = this.spline.evaluate(Math.min(1, t + LOOKAHEAD))

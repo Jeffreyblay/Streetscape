@@ -10,6 +10,7 @@ const STREET_NEAR_PLANE_M = 0.1 // default 1 m would clip the ground at low eye 
  * drag to look around (Google Street View style), move with goTo().
  */
 export class StreetView {
+  // Starts out switched off, with nothing to restore yet.
   constructor(viewer) {
     this.viewer = viewer
     this.active = false
@@ -50,6 +51,7 @@ export class StreetView {
     })
   }
 
+  // Raises or lowers your eye height without moving you.
   setEyeHeight(eyeHeight) {
     this.eyeHeight = eyeHeight
     if (!this.active || this.ground == null) return
@@ -69,16 +71,19 @@ export class StreetView {
     if (this.saved) this.viewer.camera.flyTo({ ...this.saved, duration: 2 })
   }
 
+  // Cleans up the mouse handlers.
   destroy() {
     this.dragHandler?.destroy()
     this.dragHandler = null
   }
 
+  // The exact point the camera sits at: the ground plus your eye height.
   #eyePosition() {
     const { lon, lat } = this.position
     return Cesium.Cartesian3.fromDegrees(lon, lat, this.ground + this.eyeHeight)
   }
 
+  // Turns street view on: saves the old camera, blocks the normal controls and starts drag-to-look.
   #enable() {
     const { camera, scene } = this.viewer
     this.saved = {
@@ -110,6 +115,7 @@ export class StreetView {
     this.active = true
   }
 
+  // Turns street view off and gives the normal camera controls back.
   #disable() {
     const { camera, scene } = this.viewer
     this.dragHandler?.destroy()

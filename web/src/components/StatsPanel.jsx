@@ -2,6 +2,7 @@ import Controls from './Controls.jsx'
 import StreetViewCard from './StreetViewCard.jsx'
 import DepthHistogram from './DepthHistogram.jsx'
 
+// One label-and-number row.
 function Stat({ label, value, unit }) {
   return (
     <div className="stat">
@@ -14,6 +15,7 @@ function Stat({ label, value, unit }) {
   )
 }
 
+// The depth colour bar and the building colour key.
 function DepthLegend({ legend }) {
   const max = legend[legend.length - 1].depth_ft
   // Non-linear stops: spread labels evenly, colour each stop at its own position
@@ -36,6 +38,7 @@ function DepthLegend({ legend }) {
   )
 }
 
+// Details for the building you clicked.
 function BuildingCard({ building, onClose }) {
   const b = building
   return (

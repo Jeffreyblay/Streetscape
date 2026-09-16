@@ -26,6 +26,7 @@ MARGIN = 0.06       # extend the path past both ends, as a share of its length
 
 
 def main():
+    """Traces a line down the middle of the deep water to use as the fly-through route."""
     with rasterio.open(DEPTH) as src:
         depth = src.read(1, masked=True)
         rows, cols = np.nonzero(~depth.mask & (depth.filled(0) > depth.max() * DEEP_PCT))

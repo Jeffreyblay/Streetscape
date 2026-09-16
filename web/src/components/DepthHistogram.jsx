@@ -10,6 +10,7 @@ function rampColor(legend, depth) {
   return `rgb(${ch(0)}, ${ch(1)}, ${ch(2)})`
 }
 
+// Bar chart showing how much of the flooded area falls in each depth band.
 export default function DepthHistogram({ histogram, legend }) {
   const { bin_edges_ft: edges, counts } = histogram
   const total = counts.reduce((a, b) => a + b, 0)

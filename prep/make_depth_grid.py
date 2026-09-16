@@ -33,6 +33,7 @@ FT_TO_M = 0.3048
 
 
 def main():
+    """Shrinks the depth raster to a coarse grid the browser can search quickly."""
     with rasterio.open(DEPTH) as src:
         west, south, east, north = transform_bounds(src.crs, DST_CRS, *src.bounds)
 

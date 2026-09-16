@@ -1,3 +1,4 @@
+// One labelled on/off checkbox.
 function Toggle({ label, checked, onChange, disabled }) {
   return (
     <label className={`toggle ${disabled ? 'disabled' : ''}`}>
@@ -7,6 +8,7 @@ function Toggle({ label, checked, onChange, disabled }) {
   )
 }
 
+// The Layers panel: base map choice, the layer switches and the replay button.
 export default function Controls({ layers, onChange, basemap, onBasemapChange, basemaps, onReplay }) {
   const set = (key) => (value) => onChange({ ...layers, [key]: value })
   return (

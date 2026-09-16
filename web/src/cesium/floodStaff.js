@@ -11,6 +11,7 @@ const LABEL_EVERY_FT = 2
  * bands with labels, so the water line can be read straight off the scene.
  */
 export class FloodStaff {
+  // Sets up an empty layer to hold the pole pieces.
   constructor(viewer) {
     this.viewer = viewer
     this.anchor = null
@@ -80,14 +81,17 @@ export class FloodStaff {
     )
   }
 
+  // Shows or hides the pole.
   set show(value) {
     this.source.show = value
   }
 
+  // Removes the pole from the scene.
   clear() {
     this.source.entities.removeAll()
   }
 
+  // Deletes the pole layer for good.
   destroy() {
     if (!this.viewer.isDestroyed()) this.viewer.dataSources.remove(this.source, true)
   }

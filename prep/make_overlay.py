@@ -60,6 +60,7 @@ def colourize(depth):
 
 
 def main():
+    """Makes the coloured flood image, plus a small file giving its position and legend."""
     with rasterio.open(DEPTH) as src:
         depth, transform = to_wgs84(src)
 

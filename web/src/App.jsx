@@ -8,6 +8,7 @@ import './App.css'
 
 const hasToken = Boolean(import.meta.env.VITE_CESIUM_TOKEN)
 
+// The whole dashboard: loads the data and keeps track of what the user is doing.
 export default function App() {
   const [stats, setStats] = useState(null)
   const [overlay, setOverlay] = useState(null)
