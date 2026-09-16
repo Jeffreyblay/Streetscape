@@ -52,3 +52,28 @@ export function buildingInfo(entity) {
     flooded: get('flooded'),
   }
 }
+
+/** Base map choices that need no extra API key. */
+export const BASEMAPS = {
+  satellite: { label: 'Satellite' },
+  labels: { label: 'Satellite + labels', ionAsset: 3 }, // Bing aerial with roads/labels
+  streets: { label: 'Streets (OSM)' },
+  plain: { label: 'Plain (terrain only)' },
+}
+
+/** Replace the bottom imagery layer, leaving the flood overlay on top. */
+export async function setBasemap(viewer, key) {
+  const layers = viewer.imageryLayers
+  const current = layers.get(0)
+  // The flood overlay is added after the base map, so index 0 is always the base
+  const isOverlay = current?.imageryProvider instanceof Cesium.SingleTileImageryProvider
+  let provider = null
+  if (key === 'satellite') provider = await Cesium.createWorldImageryAsync()
+  else if (key === 'labels') provider = await Cesium.IonImageryProvider.fromAssetId(BASEMAPS.labels.ionAsset)
+  else if (key === 'streets') provider = new Cesium.OpenStreetMapImageryProvider({ url: 'https://tile.openstreetmap.org/' })
+
+  if (viewer.isDestroyed()) return
+  if (current && !isOverlay) layers.remove(current, true)
+  if (provider) layers.addImageryProvider(provider, 0)
+  viewer.scene.globe.baseColor = Cesium.Color.fromCssColorString('#1b2733')
+}

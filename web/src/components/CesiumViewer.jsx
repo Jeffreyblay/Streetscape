@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
 import * as Cesium from 'cesium'
 import 'cesium/Build/Cesium/Widgets/widgets.css'
-import { addBuildings, addFloodOverlay, buildingInfo, BUILDING_COLORS } from '../cesium/layers.js'
+import { addBuildings, addFloodOverlay, buildingInfo, setBasemap, BUILDING_COLORS } from '../cesium/layers.js'
 import { addWaterSurface, WATER_ANIMATION_SPEED } from '../cesium/water.js'
 import { StreetView } from '../cesium/streetView.js'
+import { Tour } from '../cesium/tour.js'
 import { loadDepthGrid } from '../data/depthGrid.js'
 
 Cesium.Ion.defaultAccessToken = import.meta.env.VITE_CESIUM_TOKEN
@@ -38,6 +39,9 @@ export default function CesiumViewer({
   eyeHeight = 1.7,
   onPickLocation,
   onHeadingChange,
+  basemap = 'satellite',
+  tourState = 'off', // 'off' | 'playing' | 'paused'
+  onTourEnd,
 }) {
   const containerRef = useRef(null)
   const viewerRef = useRef(null)
@@ -45,19 +49,22 @@ export default function CesiumViewer({
   const waterRef = useRef(null)
   const overlayLayerRef = useRef(null)
   const streetViewRef = useRef(null)
+  const tourRef = useRef(null)
   const showDepthColorsRef = useRef(showDepthColors)
   const eyeHeightRef = useRef(eyeHeight)
   const modeRef = useRef(mode)
   const onSelectRef = useRef(onSelectBuilding)
   const onPickRef = useRef(onPickLocation)
   const onHeadingRef = useRef(onHeadingChange)
+  const onTourEndRef = useRef(onTourEnd)
   const [waterStatus, setWaterStatus] = useState('loading')
 
   useEffect(() => {
     onSelectRef.current = onSelectBuilding
     onPickRef.current = onPickLocation
     onHeadingRef.current = onHeadingChange
-  }, [onSelectBuilding, onPickLocation, onHeadingChange])
+    onTourEndRef.current = onTourEnd
+  }, [onSelectBuilding, onPickLocation, onHeadingChange, onTourEnd])
 
   // Create the viewer and load buildings + water once; destroy on unmount
   useEffect(() => {
@@ -84,6 +91,14 @@ export default function CesiumViewer({
     })
 
     streetViewRef.current = new StreetView(viewer)
+
+    const tour = new Tour(viewer)
+    tour.onEnd = () => onTourEndRef.current?.()
+    tourRef.current = tour
+    fetch('/data/tour_path.json')
+      .then((r) => r.json())
+      .then((p) => tour.prepare(p.waypoints))
+      .catch((e) => console.error('Tour path failed:', e?.message ?? e))
 
     // Report the compass heading (rounded) whenever it changes, for the minimap
     let lastHeading = null
@@ -139,6 +154,8 @@ export default function CesiumViewer({
       handler.destroy()
       streetViewRef.current?.destroy()
       streetViewRef.current = null
+      tourRef.current?.destroy()
+      tourRef.current = null
       viewer.destroy()
       viewerRef.current = null
       buildingsRef.current = null
@@ -194,6 +211,21 @@ export default function CesiumViewer({
     eyeHeightRef.current = eyeHeight
     streetViewRef.current?.setEyeHeight(eyeHeight)
   }, [eyeHeight])
+
+  // Base map
+  useEffect(() => {
+    const viewer = viewerRef.current
+    if (viewer) setBasemap(viewer, basemap).catch((e) => console.error('Base map failed:', e?.message ?? e))
+  }, [basemap])
+
+  // Bird's-eye tour
+  useEffect(() => {
+    const tour = tourRef.current
+    if (!tour) return
+    if (tourState === 'playing') tour.start()
+    else if (tourState === 'paused') tour.pause()
+    else tour.stop()
+  }, [tourState])
 
   // Keep the 3D highlight in sync with the selection in App
   useEffect(() => {

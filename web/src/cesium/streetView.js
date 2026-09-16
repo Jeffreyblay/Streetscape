@@ -1,4 +1,5 @@
 import * as Cesium from 'cesium'
+import { whenTerrainReady } from './terrain.js'
 
 const LOOK_DEG_PER_PX = 0.15
 const MAX_PITCH = Cesium.Math.toRadians(85)
@@ -24,7 +25,8 @@ export class StreetView {
   async goTo(position, eyeHeight) {
     const viewer = this.viewer
     const id = ++this.requestId
-    const [carto] = await Cesium.sampleTerrainMostDetailed(viewer.terrainProvider, [
+    const provider = await whenTerrainReady(viewer)
+    const [carto] = await Cesium.sampleTerrainMostDetailed(provider, [
       Cesium.Cartographic.fromDegrees(position.lon, position.lat),
     ])
     if (viewer.isDestroyed() || id !== this.requestId) return // superseded by a newer click/exit
@@ -39,7 +41,10 @@ export class StreetView {
     camera.flyTo({
       destination: this.#eyePosition(),
       orientation: { heading: camera.heading, pitch: entering ? 0 : camera.pitch, roll: 0 },
-      duration: entering ? 2 : 0.8,
+      duration: entering ? 3 : 0.8,
+      // Arc down and level off, rather than dropping straight in
+      easingFunction: Cesium.EasingFunction.QUADRATIC_IN_OUT,
+      pitchAdjustHeight: entering ? this.ground + 150 : undefined,
     })
   }
 

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import CesiumViewer from './components/CesiumViewer.jsx'
 import StatsPanel from './components/StatsPanel.jsx'
 import Minimap from './components/Minimap.jsx'
+import { BASEMAPS } from './cesium/layers.js'
 import { depthAt, loadDepthGrid } from './data/depthGrid.js'
 import './App.css'
 
@@ -17,6 +18,8 @@ export default function App() {
   const [streetPosition, setStreetPosition] = useState(null)
   const [eyeHeight, setEyeHeight] = useState(1.7)
   const [heading, setHeading] = useState(0)
+  const [basemap, setBasemap] = useState('satellite')
+  const [tourState, setTourState] = useState('off') // 'off' | 'playing' | 'paused'
   const [error, setError] = useState(null)
 
   // Load the prepared data (served from data/processed by vite.config.js)
@@ -39,6 +42,11 @@ export default function App() {
     setStreetPosition(null)
   }
 
+  const startPicking = () => {
+    setTourState('off')
+    setMode('picking')
+  }
+
   const handlePick = (pos) => {
     setStreetPosition(pos)
     setMode('street')
@@ -47,11 +55,13 @@ export default function App() {
   // Esc cancels picking or leaves street view
   useEffect(() => {
     const onKey = (e) => {
-      if (e.key === 'Escape' && mode !== 'aerial') exitStreetView()
+      if (e.key !== 'Escape') return
+      if (tourState !== 'off') setTourState('off')
+      if (mode !== 'aerial') exitStreetView()
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [mode])
+  }, [mode, tourState])
 
   const loading = !stats && !error
   const depthHere = grid && streetPosition ? depthAt(grid, streetPosition.lon, streetPosition.lat) : null
@@ -69,6 +79,9 @@ export default function App() {
         onClearBuilding={() => setBuilding(null)}
         layers={layers}
         onLayersChange={setLayers}
+        basemap={basemap}
+        onBasemapChange={setBasemap}
+        basemaps={BASEMAPS}
         street={
           mode === 'street'
             ? { depth: depthHere, eyeHeight, onEyeHeightChange: setEyeHeight, onExit: exitStreetView }
@@ -95,13 +108,27 @@ export default function App() {
               eyeHeight={eyeHeight}
               onPickLocation={handlePick}
               onHeadingChange={setHeading}
+              basemap={basemap}
+              tourState={tourState}
+              onTourEnd={() => setTourState('off')}
             />
             {mode === 'street' && (
               <Minimap overlay={overlay} position={streetPosition} heading={heading} />
             )}
             <div className="toolbar">
-              {mode === 'aerial' && (
-                <button className="btn" onClick={() => setMode('picking')}>📍 Street view</button>
+              {mode === 'aerial' && tourState === 'off' && (
+                <>
+                  <button className="btn" onClick={startPicking}>📍 Street view</button>
+                  <button className="btn" onClick={() => setTourState('playing')}>🕊 Fly through</button>
+                </>
+              )}
+              {mode === 'aerial' && tourState !== 'off' && (
+                <>
+                  <button className="btn" onClick={() => setTourState(tourState === 'playing' ? 'paused' : 'playing')}>
+                    {tourState === 'playing' ? '⏸ Pause' : '▶ Resume'}
+                  </button>
+                  <button className="btn ghost" onClick={() => setTourState('off')}>Stop tour</button>
+                </>
               )}
               {mode === 'picking' && (
                 <>

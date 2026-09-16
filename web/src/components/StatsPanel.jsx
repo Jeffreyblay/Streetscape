@@ -61,6 +61,9 @@ export default function StatsPanel({
   onClearBuilding,
   layers,
   onLayersChange,
+  basemap,
+  onBasemapChange,
+  basemaps,
   street,
   error,
 }) {
@@ -99,7 +102,8 @@ export default function StatsPanel({
         <Stat label="" value={inundated_area.km2.toFixed(2)} unit="km²" />
       </section>
 
-      <Controls layers={layers} onChange={onLayersChange} />
+      <Controls layers={layers} onChange={onLayersChange} basemap={basemap}
+        onBasemapChange={onBasemapChange} basemaps={basemaps} />
 
       {!building && <p className="hint">Click a building to see its flood depth.</p>}
     </aside>

@@ -25,6 +25,9 @@ Study area: a small town in eastern North Carolina (~322 acres inundated, 200 bu
   and slide your eye height from 0.5 m to 30 m.
 - **Water-line gauge** — shows where the water would reach on a standing adult
   ("knee-deep", "chest-deep") and whether your eye is below the surface.
+- **Bird's-eye fly-through** — a smooth tour that follows the flood channel at ~120 m,
+  banking into turns. The path is derived from the deepest raster cells, not hand-drawn.
+- **Base maps** — satellite, satellite with labels, OpenStreetMap or plain terrain.
 - **Summary statistics** — depth range, inundated area, affected buildings, and a
   histogram of flooded area by depth band.
 
@@ -52,6 +55,7 @@ reads. They only need to be re-run when the source data changes.
 | `prep/make_stats.py` | `stats.json` | Summary statistics and the depth histogram |
 | `prep/make_overlay.py` | `flood_depth.png`, `flood_overlay.json` | Colour-ramped overlay reprojected to WGS84, plus bounds and legend |
 | `prep/make_depth_grid.py` | `depth_grid.json` | ~12.5 ft depth grid for point queries and the water mesh |
+| `prep/make_tour_path.py` | `tour_path.json` | Centreline of the deep channel, used as the fly-through path |
 
 Run them in that order with a Python environment that has `rasterio`, `geopandas`,
 `numpy` and `pillow`:
@@ -61,6 +65,7 @@ python prep/building_depth.py
 python prep/make_stats.py
 python prep/make_overlay.py
 python prep/make_depth_grid.py
+python prep/make_tour_path.py
 ```
 
 ### Inputs

@@ -1,4 +1,5 @@
 import * as Cesium from 'cesium'
+import { whenTerrainReady } from './terrain.js'
 
 // Dry vertices at the water's edge sit this far below ground, so the terrain
 // cuts a natural shoreline through the mesh instead of a jagged step.
@@ -9,22 +10,6 @@ const SMOOTH_PASSES = 3
 const MIN_DEPTH_M = 0.02
 
 export const WATER_ANIMATION_SPEED = 0.01
-
-/**
- * Resolve once the viewer has real terrain. While World Terrain is still loading,
- * the provider may be undefined or a flat EllipsoidTerrainProvider placeholder.
- */
-function terrainReady(viewer) {
-  const isReal = (p) => p && !(p instanceof Cesium.EllipsoidTerrainProvider)
-  if (isReal(viewer.terrainProvider)) return Promise.resolve(viewer.terrainProvider)
-  return new Promise((resolve) => {
-    const remove = viewer.scene.terrainProviderChanged.addEventListener(() => {
-      if (!isReal(viewer.terrainProvider)) return
-      remove()
-      resolve(viewer.terrainProvider)
-    })
-  })
-}
 
 /**
  * Build an animated water surface from depth_grid.json.
@@ -62,7 +47,7 @@ export async function addWaterSurface(viewer, grid) {
       north - (Math.floor(i / cols) + 0.5) * dlat,
     ),
   )
-  const provider = await terrainReady(viewer)
+  const provider = await whenTerrainReady(viewer)
   if (viewer.isDestroyed()) return null
   await Cesium.sampleTerrainMostDetailed(provider, cartos)
   if (viewer.isDestroyed()) return null

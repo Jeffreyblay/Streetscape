@@ -163,6 +163,18 @@
 .hint.small { margin-top: 0.6rem; font-size: 0.72rem; }
 
 
+.select { display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; padding: 0.3rem 0 0.5rem; font-size: 0.875rem; }
+.select select {
+  font: inherit;
+  font-size: 0.8rem;
+  color: var(--text);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 0.2rem 0.3rem;
+  cursor: pointer;
+}
+
 /* Depth histogram */
 .histogram { margin-top: 0.9rem; }
 .histogram .bars { display: flex; align-items: flex-end; gap: 2px; }
