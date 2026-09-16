@@ -70,7 +70,10 @@ export async function setBasemap(viewer, key) {
   let provider = null
   if (key === 'satellite') provider = await Cesium.createWorldImageryAsync()
   else if (key === 'labels') provider = await Cesium.IonImageryProvider.fromAssetId(BASEMAPS.labels.ionAsset)
-  else if (key === 'streets') provider = new Cesium.OpenStreetMapImageryProvider({ url: 'https://tile.openstreetmap.org/' })
+  else if (key === 'streets') provider = new Cesium.OpenStreetMapImageryProvider({
+      url: 'https://tile.openstreetmap.org/',
+      maximumLevel: 19, // OSM serves no deeper; Cesium stretches level 19 when you zoom closer
+    })
 
   if (viewer.isDestroyed()) return
   if (current && !isOverlay) layers.remove(current, true)

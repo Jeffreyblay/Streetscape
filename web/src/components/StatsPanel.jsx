@@ -67,7 +67,6 @@ export default function StatsPanel({
   basemap,
   onBasemapChange,
   basemaps,
-  onReplay,
   street,
   error,
 }) {
@@ -82,32 +81,33 @@ export default function StatsPanel({
       {building && <BuildingCard building={building} onClose={onClearBuilding} />}
 
       <section>
-        <h2>Flood depth</h2>
-        <Stat label="Maximum" value={depth_ft.max.toFixed(1)} unit="ft" />
-        <Stat label="Mean" value={depth_ft.mean.toFixed(1)} unit="ft" />
-        <Stat label="Minimum" value={depth_ft.min.toFixed(2)} unit="ft" />
-        {overlay && <DepthLegend legend={overlay.legend} />}
-        {stats.histogram && <DepthHistogram histogram={stats.histogram} legend={overlay?.legend} />}
-      </section>
-
-      <section>
-        <h2>Buildings</h2>
+        <h2>Flood summary</h2>
+        <Stat label="Maximum depth" value={depth_ft.max.toFixed(1)} unit="ft" />
+        <Stat label="Mean depth" value={depth_ft.mean.toFixed(1)} unit="ft" />
         <Stat
-          label="Affected"
+          label="Buildings hit"
           value={`${buildings.flooded} / ${buildings.total}`}
           unit={`(${buildings.pct_flooded.toFixed(0)}%)`}
         />
-        <Stat label="Deepest at a building" value={buildings.max_depth_ft.toFixed(1)} unit="ft" />
+        <Stat
+          label="Flooded area"
+          value={inundated_area.acres.toFixed(0)}
+          unit={`acres (${inundated_area.km2.toFixed(2)} km²)`}
+        />
       </section>
 
       <section>
-        <h2>Inundated area</h2>
-        <Stat label="Area" value={inundated_area.acres.toFixed(0)} unit="acres" />
-        <Stat label="" value={inundated_area.km2.toFixed(2)} unit="km²" />
+        <h2>Depth distribution</h2>
+        {overlay && <DepthLegend legend={overlay.legend} />}
+        {stats.histogram && <DepthHistogram histogram={stats.histogram} legend={overlay?.legend} />}
+        <p className="footnote">
+          Deepest water against a building {buildings.max_depth_ft.toFixed(1)} ft · shallowest
+          mapped {depth_ft.min.toFixed(2)} ft
+        </p>
       </section>
 
       <Controls layers={layers} onChange={onLayersChange} basemap={basemap}
-        onBasemapChange={onBasemapChange} basemaps={basemaps} onReplay={onReplay} />
+        onBasemapChange={onBasemapChange} basemaps={basemaps} />
 
       {!building && <p className="hint">Click a building to see its flood depth.</p>}
     </aside>

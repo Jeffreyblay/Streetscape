@@ -10,9 +10,21 @@ export default defineConfig({
     react(),
     viteStaticCopy({
       targets: [
-        // Cesium's runtime assets, served at /cesium/* (see CESIUM_BASE_URL in index.html)
-        ...['Workers', 'ThirdParty', 'Assets', 'Widgets'].map((dir) => ({
-          src: `${cesiumBuild}/${dir}/**/*`,
+        // Cesium's runtime assets, served at /cesium/* (see CESIUM_BASE_URL in index.html).
+        // Only the parts this app uses are copied - see docs in README (Deployment).
+        ...[
+          'Workers/**/*',
+          'Widgets/**/*',
+          'ThirdParty/Workers/**/*',
+          'ThirdParty/zip-module.wasm',
+          'ThirdParty/wasm_splats_bg.wasm',
+          'Assets/Images/**/*', // credit logos
+          'Assets/approximateTerrainHeights.json', // needed to clamp buildings to terrain
+          'Assets/Textures/waterNormals.jpg', // the water surface ripples
+          'Assets/Textures/moonSmall.jpg',
+          'Assets/Textures/pin.svg',
+        ].map((pattern) => ({
+          src: `${cesiumBuild}/${pattern}`,
           dest: 'cesium',
           rename: { stripBase: 4 }, // node_modules/cesium/Build/Cesium
         })),

@@ -25,7 +25,7 @@ export default function App() {
   const [streetPosition, setStreetPosition] = useState(null)
   const [eyeHeight, setEyeHeight] = useState(1.7)
   const [heading, setHeading] = useState(0)
-  const [basemap, setBasemap] = useState('satellite')
+  const [basemap, setBasemap] = useState('streets')
   const [tourState, setTourState] = useState('off') // 'off' | 'playing' | 'paused'
   const [replayToken, setReplayToken] = useState(0)
   const [error, setError] = useState(null)
@@ -49,6 +49,9 @@ export default function App() {
     setMode('aerial')
     setStreetPosition(null)
   }
+
+  // Drops the water below ground and raises it again, so the flood arrives while you watch.
+  const animateFlooding = () => setReplayToken((t) => t + 1)
 
   const startPicking = () => {
     setTourState('off')
@@ -93,7 +96,6 @@ export default function App() {
         basemap={basemap}
         onBasemapChange={setBasemap}
         basemaps={BASEMAPS}
-        onReplay={() => setReplayToken((t) => t + 1)}
         street={
           mode === 'street'
             ? { depth: depthHere, eyeHeight, onEyeHeightChange: setEyeHeight, onExit: exitStreetView }
@@ -139,6 +141,9 @@ export default function App() {
                 <>
                   <button className="btn" onClick={startPicking}>📍 Street view</button>
                   <button className="btn" onClick={() => setTourState('playing')}>🕊 Fly through</button>
+                  <button className="btn" onClick={animateFlooding} disabled={!layers.showWater}>
+                    ▶ Animate flooding
+                  </button>
                 </>
               )}
               {mode === 'aerial' && tourState !== 'off' && (
@@ -156,7 +161,12 @@ export default function App() {
                 </>
               )}
               {mode === 'street' && (
-                <button className="btn" onClick={exitStreetView}>⤺ Exit to map</button>
+                <>
+                  <button className="btn" onClick={exitStreetView}>⤺ Exit to map</button>
+                  <button className="btn" onClick={animateFlooding} disabled={!layers.showWater}>
+                    ▶ Animate flooding
+                  </button>
+                </>
               )}
             </div>
           </>

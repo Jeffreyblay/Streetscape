@@ -9,11 +9,11 @@ function Toggle({ label, checked, onChange, disabled }) {
 }
 
 // The Layers panel: base map choice, the layer switches and the replay button.
-export default function Controls({ layers, onChange, basemap, onBasemapChange, basemaps, onReplay }) {
+export default function Controls({ layers, onChange, basemap, onBasemapChange, basemaps }) {
   const set = (key) => (value) => onChange({ ...layers, [key]: value })
   return (
     <section>
-      <h2>Layers</h2>
+      <h2>Map layers</h2>
       <label className="select">
         <span>Base map</span>
         <select value={basemap} onChange={(e) => onBasemapChange(e.target.value)}>
@@ -41,9 +41,6 @@ export default function Controls({ layers, onChange, basemap, onBasemapChange, b
         checked={layers.showWaterMarks}
         onChange={set('showWaterMarks')}
       />
-      <button className="btn-small replay" onClick={onReplay} disabled={!layers.showWater}>
-        ▶ Replay flooding
-      </button>
     </section>
   )
 }

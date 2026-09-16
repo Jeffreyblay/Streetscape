@@ -28,7 +28,11 @@
   background: var(--surface);
   border-right: 1px solid var(--border);
 }
-.panel section + section { margin-top: 1.5rem; }
+.panel section + section {
+  margin-top: 1.25rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--border);
+}
 .panel h2 {
   margin: 0 0 0.5rem;
   font-size: 0.75rem;
@@ -176,8 +180,24 @@
   cursor: pointer;
 }
 
-.btn-small.replay { margin-top: 0.6rem; padding: 0.3rem 0.7rem; }
-.btn-small:disabled { opacity: 0.45; cursor: default; }
+.btn:disabled, .btn-small:disabled { opacity: 0.45; cursor: default; }
+
+/* Summary tiles */
+.tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; }
+.tile {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  padding: 0.5rem 0.6rem;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+.tile-label { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); }
+.tile-value { font-size: 1.2rem; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1.2; }
+.tile-unit { font-size: 0.72rem; font-weight: 400; color: var(--muted); }
+.tile-note { font-size: 0.68rem; color: var(--muted); }
+.footnote { margin: 0.6rem 0 0; font-size: 0.72rem; color: var(--muted); line-height: 1.45; }
 
 /* Depth histogram */
 .histogram { margin-top: 0.9rem; }
