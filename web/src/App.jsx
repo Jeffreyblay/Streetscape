@@ -78,7 +78,9 @@ export default function App() {
     <div className="app">
       <header className="header">
         <h1>Streetscape</h1>
-        <span className="subtitle">Flood depth · eastern North Carolina</span>
+        <span className="subtitle">
+          3D immersive floodwater depth dashboard · Hanchey Store, eastern North Carolina
+        </span>
       </header>
       <StatsPanel
         stats={stats}
