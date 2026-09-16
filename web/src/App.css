@@ -209,6 +209,27 @@
 .minimap-you .cone { fill: #ffe14d55; }
 .minimap-you .dot { fill: #ffe14d; stroke: #16212c; stroke-width: 1.2; }
 
+/* Underwater tint: the water surface isn't drawn from below, so show the state */
+.underwater {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse at 50% 45%, #1b6fa833 0%, #0d3c66aa 60%, #071f3ddd 100%);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding-bottom: 2.5rem;
+}
+.underwater span {
+  padding: 0.35rem 0.9rem;
+  border-radius: 999px;
+  background: #071f3dcc;
+  color: #cfe8fb;
+  font-size: 0.85rem;
+}
+
 /* Loading splash */
 .splash {
   position: absolute;

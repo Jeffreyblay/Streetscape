@@ -13,7 +13,7 @@ export default function App() {
   const [overlay, setOverlay] = useState(null)
   const [grid, setGrid] = useState(null)
   const [building, setBuilding] = useState(null)
-  const [layers, setLayers] = useState({ showWater: true, animateWater: true, showDepthColors: true })
+  const [layers, setLayers] = useState({ showWater: true, animateWater: true, colorWaterByDepth: true, showDepthColors: false })
   const [mode, setMode] = useState('aerial') // 'aerial' | 'picking' | 'street'
   const [streetPosition, setStreetPosition] = useState(null)
   const [eyeHeight, setEyeHeight] = useState(1.7)
@@ -65,6 +65,7 @@ export default function App() {
 
   const loading = !stats && !error
   const depthHere = grid && streetPosition ? depthAt(grid, streetPosition.lon, streetPosition.lat) : null
+  const underwater = mode === 'street' && depthHere != null && eyeHeight < depthHere
 
   return (
     <div className="app">
@@ -112,6 +113,11 @@ export default function App() {
               tourState={tourState}
               onTourEnd={() => setTourState('off')}
             />
+            {underwater && (
+              <div className="underwater" aria-hidden="true">
+                <span>Underwater — raise your eye height to surface</span>
+              </div>
+            )}
             {mode === 'street' && (
               <Minimap overlay={overlay} position={streetPosition} heading={heading} />
             )}

@@ -34,6 +34,7 @@ export default function CesiumViewer({
   showWater = true,
   animateWater = true,
   showDepthColors = true,
+  colorWaterByDepth = true,
   mode = 'aerial', // 'aerial' | 'picking' | 'street'
   streetPosition = null,
   eyeHeight = 1.7,
@@ -51,6 +52,7 @@ export default function CesiumViewer({
   const streetViewRef = useRef(null)
   const tourRef = useRef(null)
   const showDepthColorsRef = useRef(showDepthColors)
+  const colorWaterByDepthRef = useRef(colorWaterByDepth)
   const eyeHeightRef = useRef(eyeHeight)
   const modeRef = useRef(mode)
   const onSelectRef = useRef(onSelectBuilding)
@@ -113,8 +115,8 @@ export default function CesiumViewer({
     // Dev-only handle for debugging in the browser console (stripped from production builds)
     if (import.meta.env.DEV) window.__streetscape = { viewer, streetView: streetViewRef.current, Cesium }
 
-    loadDepthGrid()
-      .then((grid) => addWaterSurface(viewer, grid))
+    Promise.all([loadDepthGrid(), fetch('/data/flood_overlay.json').then((r) => r.json())])
+      .then(([grid, ov]) => addWaterSurface(viewer, grid, ov.legend, colorWaterByDepthRef.current))
       .then((primitive) => {
         if (!primitive || viewer.isDestroyed()) return
         waterRef.current = primitive
@@ -192,6 +194,14 @@ export default function CesiumViewer({
   useEffect(() => {
     if (waterRef.current) waterRef.current.show = showWater
   }, [showWater, waterStatus])
+
+  useEffect(() => {
+    colorWaterByDepthRef.current = colorWaterByDepth
+    const water = waterRef.current
+    if (water?.materials) {
+      water.appearance.material = colorWaterByDepth ? water.materials.depth : water.materials.plain
+    }
+  }, [colorWaterByDepth, waterStatus])
 
   useEffect(() => {
     const water = waterRef.current

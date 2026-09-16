@@ -11,11 +11,110 @@ const MIN_DEPTH_M = 0.02
 
 export const WATER_ANIMATION_SPEED = 0.01
 
+
+const M_TO_FT = 3.28084
+const SHALLOW_ALPHA = 0.5
+const DEEP_ALPHA = 0.85
+const DEEP_FT = 8 // depth at which the water reaches DEEP_ALPHA
+
+/** Colour at a depth (ft), interpolated between the overlay legend stops. */
+function rampColor(legend, ft) {
+  const i = Math.max(1, legend.findIndex((stop) => stop.depth_ft >= ft))
+  const lo = legend[i - 1]
+  const hi = legend[i] ?? legend[legend.length - 1]
+  const t = hi.depth_ft === lo.depth_ft ? 0 : (ft - lo.depth_ft) / (hi.depth_ft - lo.depth_ft)
+  return [0, 1, 2].map((k) => lo.rgba[k] + t * (hi.rgba[k] - lo.rgba[k]))
+}
+
+/**
+ * Paint the depth grid into a texture using the legend ramp, so the water
+ * surface itself carries the depth colours. Deeper water is more opaque.
+ */
+function depthTexture(grid, legend) {
+  const { cols, rows, values } = grid
+  const canvas = document.createElement('canvas')
+  canvas.width = cols
+  canvas.height = rows
+  const ctx = canvas.getContext('2d')
+  const img = ctx.createImageData(cols, rows)
+
+  for (let i = 0; i < values.length; i++) {
+    const depth = values[i]
+    const px = i * 4
+    if (depth === null) continue // dry: transparent
+    const ft = depth * M_TO_FT
+    const [r, g, b] = rampColor(legend, ft)
+    const a = SHALLOW_ALPHA + (DEEP_ALPHA - SHALLOW_ALPHA) * Math.min(1, ft / DEEP_FT)
+    img.data[px] = r
+    img.data[px + 1] = g
+    img.data[px + 2] = b
+    img.data[px + 3] = Math.round(a * 255)
+  }
+  ctx.putImageData(img, 0, 0)
+  return canvas.toDataURL()
+}
+
+/** Cesium's water shader, with the flat base colour replaced by the depth texture. */
+const DEPTH_WATER_SOURCE = `
+uniform sampler2D depthMap;
+uniform sampler2D normalMap;
+uniform vec2 aspect;
+uniform float frequency;
+uniform float animationSpeed;
+uniform float amplitude;
+uniform float specularIntensity;
+
+czm_material czm_getMaterial(czm_materialInput materialInput)
+{
+    czm_material material = czm_getDefaultMaterial(materialInput);
+    float time = czm_frameNumber * animationSpeed;
+
+    // ripples: scale by aspect so they stay square on a non-square grid
+    vec4 noise = czm_getWaterNoise(normalMap, materialInput.st * aspect * frequency, time, 0.0);
+    vec3 normalTangentSpace = normalize(noise.xyz * vec3(1.0, 1.0, (1.0 / amplitude)));
+    float tsPerturbationRatio = clamp(dot(normalTangentSpace, vec3(0.0, 0.0, 1.0)), 0.0, 1.0);
+
+    vec4 depthColor = texture(depthMap, materialInput.st);
+    material.diffuse = czm_gammaCorrect(depthColor.rgb) + (0.1 * tsPerturbationRatio);
+    material.alpha = depthColor.a;
+    material.normal = normalize(materialInput.tangentToEyeMatrix * normalTangentSpace);
+    material.specular = specularIntensity;
+    material.shininess = 10.0;
+    return material;
+}
+`
+
+/** Plain tinted water (the original look) and depth-coloured water. */
+export function buildWaterMaterials(grid, legend) {
+  const span = Math.max(grid.cols, grid.rows)
+  const shared = {
+    normalMap: Cesium.buildModuleUrl('Assets/Textures/waterNormals.jpg'),
+    frequency: 800,
+    animationSpeed: WATER_ANIMATION_SPEED,
+    amplitude: 6,
+    specularIntensity: 0.6,
+  }
+  return {
+    plain: Cesium.Material.fromType('Water', {
+      ...shared,
+      baseWaterColor: Cesium.Color.fromCssColorString('#3a96d6').withAlpha(0.3),
+    }),
+    depth: new Cesium.Material({
+      fabric: {
+        type: 'DepthWater',
+        uniforms: { ...shared, depthMap: depthTexture(grid, legend), aspect: new Cesium.Cartesian2(grid.cols / span, grid.rows / span) },
+        source: DEPTH_WATER_SOURCE,
+      },
+      translucent: true,
+    }),
+  }
+}
+
 /**
  * Build an animated water surface from depth_grid.json.
  * Vertices are grid cell centres; a quad is kept if any corner is wet.
  */
-export async function addWaterSurface(viewer, grid) {
+export async function addWaterSurface(viewer, grid, legend, colorByDepth = true) {
   if (viewer.isDestroyed()) return null
   const t0 = performance.now()
   const { cols, rows, west, north, dlon, dlat, values } = grid
@@ -78,15 +177,15 @@ export async function addWaterSurface(viewer, grid) {
     })
   }
 
-  // 4. Geometry: positions + texture coordinates (for the ripple normal map)
-  const span = Math.max(cols, rows)
+  // 4. Geometry: positions + texture coordinates.
+  //    st spans the grid exactly, so the depth texture lines up cell for cell.
   const positions = new Float64Array(gridIds.length * 3)
   const st = new Float32Array(gridIds.length * 2)
   gridIds.forEach((i, v) => {
     const h = Number.isNaN(wse[v]) ? ground[v] + DRY_EDGE_OFFSET_M : wse[v]
     const p = Cesium.Cartesian3.fromRadians(cartos[v].longitude, cartos[v].latitude, h)
     positions.set([p.x, p.y, p.z], v * 3)
-    st.set([(i % cols) / span, (rows - Math.floor(i / cols)) / span], v * 2)
+    st.set([((i % cols) + 0.5) / cols, 1 - (Math.floor(i / cols) + 0.5) / rows], v * 2)
   })
 
   const indices = new Uint32Array(quads.length * 6)
@@ -113,24 +212,20 @@ export async function addWaterSurface(viewer, grid) {
     boundingSphere: Cesium.BoundingSphere.fromVertices(positions),
   })
 
-  // 5. Cesium's animated water material. Kept light and transparent so the depth
-  //    colours underneath show through; the surface adds ripples and reflections.
-  const material = Cesium.Material.fromType('Water', {
-    baseWaterColor: Cesium.Color.fromCssColorString('#3a96d6').withAlpha(0.3), // "2 ft" stop of the depth ramp
-    normalMap: Cesium.buildModuleUrl('Assets/Textures/waterNormals.jpg'),
-    frequency: 800,
-    animationSpeed: WATER_ANIMATION_SPEED,
-    amplitude: 6,
-    specularIntensity: 0.6,
-  })
+  // 5. Two materials: depth-coloured (the water IS the depth map) and plain tint
+  const materials = buildWaterMaterials(grid, legend)
 
   // The surface is nearly parallel to the ellipsoid, so EllipsoidSurfaceAppearance
   // (which the Water material needs) gives correct lighting.
   const primitive = new Cesium.Primitive({
     geometryInstances: new Cesium.GeometryInstance({ geometry }),
-    appearance: new Cesium.EllipsoidSurfaceAppearance({ aboveGround: true, material }),
+    appearance: new Cesium.EllipsoidSurfaceAppearance({
+      aboveGround: true,
+      material: colorByDepth ? materials.depth : materials.plain,
+    }),
     asynchronous: false, // custom geometry can't be built in a web worker
   })
+  primitive.materials = materials // so the UI can switch between them
   viewer.scene.primitives.add(primitive)
 
   const wetCount = gridIds.filter(isWet).length

@@ -27,7 +27,13 @@ export default function Controls({ layers, onChange, basemap, onBasemapChange, b
         onChange={set('animateWater')}
         disabled={!layers.showWater}
       />
-      <Toggle label="Depth colours" checked={layers.showDepthColors} onChange={set('showDepthColors')} />
+      <Toggle
+        label="Colour water by depth"
+        checked={layers.colorWaterByDepth}
+        onChange={set('colorWaterByDepth')}
+        disabled={!layers.showWater}
+      />
+      <Toggle label="Depth colours on ground" checked={layers.showDepthColors} onChange={set('showDepthColors')} />
     </section>
   )
 }
