@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import CesiumViewer from './components/CesiumViewer.jsx'
 import StatsPanel from './components/StatsPanel.jsx'
+import Minimap from './components/Minimap.jsx'
 import { depthAt, loadDepthGrid } from './data/depthGrid.js'
 import './App.css'
 
@@ -15,6 +16,7 @@ export default function App() {
   const [mode, setMode] = useState('aerial') // 'aerial' | 'picking' | 'street'
   const [streetPosition, setStreetPosition] = useState(null)
   const [eyeHeight, setEyeHeight] = useState(1.7)
+  const [heading, setHeading] = useState(0)
   const [error, setError] = useState(null)
 
   // Load the prepared data (served from data/processed by vite.config.js)
@@ -51,6 +53,7 @@ export default function App() {
     return () => window.removeEventListener('keydown', onKey)
   }, [mode])
 
+  const loading = !stats && !error
   const depthHere = grid && streetPosition ? depthAt(grid, streetPosition.lon, streetPosition.lat) : null
 
   return (
@@ -74,6 +77,12 @@ export default function App() {
         error={error}
       />
       <main className="viewer">
+        {loading && (
+          <div className="splash">
+            <div className="spinner" />
+            <p>Loading flood data…</p>
+          </div>
+        )}
         {hasToken ? (
           <>
             <CesiumViewer
@@ -85,7 +94,11 @@ export default function App() {
               streetPosition={streetPosition}
               eyeHeight={eyeHeight}
               onPickLocation={handlePick}
+              onHeadingChange={setHeading}
             />
+            {mode === 'street' && (
+              <Minimap overlay={overlay} position={streetPosition} heading={heading} />
+            )}
             <div className="toolbar">
               {mode === 'aerial' && (
                 <button className="btn" onClick={() => setMode('picking')}>📍 Street view</button>

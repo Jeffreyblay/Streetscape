@@ -37,6 +37,7 @@ export default function CesiumViewer({
   streetPosition = null,
   eyeHeight = 1.7,
   onPickLocation,
+  onHeadingChange,
 }) {
   const containerRef = useRef(null)
   const viewerRef = useRef(null)
@@ -49,12 +50,14 @@ export default function CesiumViewer({
   const modeRef = useRef(mode)
   const onSelectRef = useRef(onSelectBuilding)
   const onPickRef = useRef(onPickLocation)
+  const onHeadingRef = useRef(onHeadingChange)
   const [waterStatus, setWaterStatus] = useState('loading')
 
   useEffect(() => {
     onSelectRef.current = onSelectBuilding
     onPickRef.current = onPickLocation
-  }, [onSelectBuilding, onPickLocation])
+    onHeadingRef.current = onHeadingChange
+  }, [onSelectBuilding, onPickLocation, onHeadingChange])
 
   // Create the viewer and load buildings + water once; destroy on unmount
   useEffect(() => {
@@ -81,6 +84,17 @@ export default function CesiumViewer({
     })
 
     streetViewRef.current = new StreetView(viewer)
+
+    // Report the compass heading (rounded) whenever it changes, for the minimap
+    let lastHeading = null
+    const onRender = () => {
+      const deg = Math.round(Cesium.Math.toDegrees(viewer.camera.heading))
+      if (deg !== lastHeading) {
+        lastHeading = deg
+        onHeadingRef.current?.(deg)
+      }
+    }
+    viewer.scene.postRender.addEventListener(onRender)
     // Dev-only handle for debugging in the browser console (stripped from production builds)
     if (import.meta.env.DEV) window.__streetscape = { viewer, streetView: streetViewRef.current, Cesium }
 
@@ -121,6 +135,7 @@ export default function CesiumViewer({
     }, Cesium.ScreenSpaceEventType.LEFT_CLICK)
 
     return () => {
+      viewer.scene.postRender.removeEventListener(onRender)
       handler.destroy()
       streetViewRef.current?.destroy()
       streetViewRef.current = null

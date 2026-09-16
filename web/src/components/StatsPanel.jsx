@@ -1,5 +1,6 @@
 import Controls from './Controls.jsx'
 import StreetViewCard from './StreetViewCard.jsx'
+import DepthHistogram from './DepthHistogram.jsx'
 
 function Stat({ label, value, unit }) {
   return (
@@ -79,6 +80,7 @@ export default function StatsPanel({
         <Stat label="Mean" value={depth_ft.mean.toFixed(1)} unit="ft" />
         <Stat label="Minimum" value={depth_ft.min.toFixed(2)} unit="ft" />
         {overlay && <DepthLegend legend={overlay.legend} />}
+        {stats.histogram && <DepthHistogram histogram={stats.histogram} legend={overlay?.legend} />}
       </section>
 
       <section>

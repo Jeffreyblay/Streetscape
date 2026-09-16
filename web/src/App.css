@@ -162,6 +162,65 @@
 .chip.on { background: var(--accent); border-color: var(--accent); color: #fff; }
 .hint.small { margin-top: 0.6rem; font-size: 0.72rem; }
 
+
+/* Depth histogram */
+.histogram { margin-top: 0.9rem; }
+.histogram .bars { display: flex; align-items: flex-end; gap: 2px; }
+.histogram .bar { flex: 1; border-radius: 2px 2px 0 0; transition: filter 0.15s; }
+.histogram .bar:hover { filter: brightness(1.35); }
+.bar-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.65rem;
+  color: var(--muted);
+  margin-top: 0.15rem;
+}
+.bar-labels span { flex: 1; text-align: left; }
+.bar-labels span:last-child { flex: 0; }
+.caption { margin: 0.35rem 0 0; font-size: 0.7rem; color: var(--muted); }
+
+/* Minimap (street view) */
+.minimap {
+  position: absolute;
+  right: 0.75rem;
+  bottom: 2rem;
+  width: 150px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  overflow: hidden;
+  background: #16212cdd;
+  box-shadow: 0 2px 10px #0008;
+}
+.minimap img { display: block; width: 100%; opacity: 0.85; }
+.minimap-you { position: absolute; width: 0; height: 0; }
+.minimap-you svg { position: absolute; left: -14px; top: -14px; width: 28px; height: 28px; }
+.minimap-you .cone { fill: #ffe14d55; }
+.minimap-you .dot { fill: #ffe14d; stroke: #16212c; stroke-width: 1.2; }
+
+/* Loading splash */
+.splash {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.9rem;
+  background: var(--bg);
+  color: var(--muted);
+}
+.spinner {
+  width: 34px;
+  height: 34px;
+  border: 3px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.9s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .spinner { animation-duration: 3s; } }
+
 .viewer { grid-area: viewer; position: relative; min-height: 0; }
 .cesium-container { position: absolute; inset: 0; }
 
@@ -175,5 +234,8 @@
     grid-template-rows: auto auto 1fr;
     grid-template-areas: 'header' 'panel' 'viewer';
   }
-  .panel { border-right: none; border-bottom: 1px solid var(--border); max-height: 35vh; }
+  .panel { border-right: none; border-bottom: 1px solid var(--border); max-height: 40vh; }
+  .toolbar { flex-wrap: wrap; max-width: calc(100% - 1.5rem); }
+  .minimap { width: 96px; bottom: 1rem; }
+  .header h1 { font-size: 1.05rem; }
 }
