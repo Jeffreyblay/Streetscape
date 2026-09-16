@@ -7,7 +7,7 @@ function Toggle({ label, checked, onChange, disabled }) {
   )
 }
 
-export default function Controls({ layers, onChange, basemap, onBasemapChange, basemaps }) {
+export default function Controls({ layers, onChange, basemap, onBasemapChange, basemaps, onReplay }) {
   const set = (key) => (value) => onChange({ ...layers, [key]: value })
   return (
     <section>
@@ -34,6 +34,14 @@ export default function Controls({ layers, onChange, basemap, onBasemapChange, b
         disabled={!layers.showWater}
       />
       <Toggle label="Depth colours on ground" checked={layers.showDepthColors} onChange={set('showDepthColors')} />
+      <Toggle
+        label="Water mark on buildings"
+        checked={layers.showWaterMarks}
+        onChange={set('showWaterMarks')}
+      />
+      <button className="btn-small replay" onClick={onReplay} disabled={!layers.showWater}>
+        ▶ Replay flooding
+      </button>
     </section>
   )
 }

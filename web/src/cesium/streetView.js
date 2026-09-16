@@ -19,6 +19,7 @@ export class StreetView {
     this.saved = null // aerial camera to return to
     this.requestId = 0
     this.dragHandler = null
+    this.onArrive = null // ({ lon, lat, ground, heading }) => void
   }
 
   /** Stand at a point (entering street view if needed). */
@@ -38,6 +39,7 @@ export class StreetView {
     const entering = !this.active
     if (entering) this.#enable()
     const { camera } = viewer
+    this.onArrive?.({ ...position, ground: this.ground, heading: camera.heading })
     camera.flyTo({
       destination: this.#eyePosition(),
       orientation: { heading: camera.heading, pitch: entering ? 0 : camera.pitch, roll: 0 },

@@ -2,9 +2,11 @@ import { useEffect, useRef, useState } from 'react'
 import * as Cesium from 'cesium'
 import 'cesium/Build/Cesium/Widgets/widgets.css'
 import { addBuildings, addFloodOverlay, buildingInfo, setBasemap, BUILDING_COLORS } from '../cesium/layers.js'
-import { addWaterSurface, WATER_ANIMATION_SPEED } from '../cesium/water.js'
+import { addWaterSurface, replayFlooding, WATER_ANIMATION_SPEED } from '../cesium/water.js'
 import { StreetView } from '../cesium/streetView.js'
 import { Tour } from '../cesium/tour.js'
+import { FloodStaff } from '../cesium/floodStaff.js'
+import { addWaterMarks } from '../cesium/waterMarks.js'
 import { loadDepthGrid } from '../data/depthGrid.js'
 
 Cesium.Ion.defaultAccessToken = import.meta.env.VITE_CESIUM_TOKEN
@@ -43,6 +45,8 @@ export default function CesiumViewer({
   basemap = 'satellite',
   tourState = 'off', // 'off' | 'playing' | 'paused'
   onTourEnd,
+  showWaterMarks = false,
+  replayToken = 0,
 }) {
   const containerRef = useRef(null)
   const viewerRef = useRef(null)
@@ -51,6 +55,8 @@ export default function CesiumViewer({
   const overlayLayerRef = useRef(null)
   const streetViewRef = useRef(null)
   const tourRef = useRef(null)
+  const staffRef = useRef(null)
+  const waterMarksRef = useRef(null)
   const showDepthColorsRef = useRef(showDepthColors)
   const colorWaterByDepthRef = useRef(colorWaterByDepth)
   const eyeHeightRef = useRef(eyeHeight)
@@ -60,6 +66,7 @@ export default function CesiumViewer({
   const onHeadingRef = useRef(onHeadingChange)
   const onTourEndRef = useRef(onTourEnd)
   const [waterStatus, setWaterStatus] = useState('loading')
+  const [buildingsReady, setBuildingsReady] = useState(false)
 
   useEffect(() => {
     onSelectRef.current = onSelectBuilding
@@ -89,10 +96,16 @@ export default function CesiumViewer({
     viewerRef.current = viewer
 
     addBuildings(viewer).then((source) => {
-      if (!viewer.isDestroyed()) buildingsRef.current = source
+      if (viewer.isDestroyed()) return
+      buildingsRef.current = source
+      setBuildingsReady(true)
     })
 
-    streetViewRef.current = new StreetView(viewer)
+    const streetView = new StreetView(viewer)
+    streetViewRef.current = streetView
+    // Plant the depth staff wherever the viewer arrives
+    staffRef.current = new FloodStaff(viewer)
+    streetView.onArrive = (where) => staffRef.current?.plant(where)
 
     const tour = new Tour(viewer)
     tour.onEnd = () => onTourEndRef.current?.()
@@ -158,6 +171,8 @@ export default function CesiumViewer({
       streetViewRef.current = null
       tourRef.current?.destroy()
       tourRef.current = null
+      staffRef.current?.destroy()
+      staffRef.current = null
       viewer.destroy()
       viewerRef.current = null
       buildingsRef.current = null
@@ -214,7 +229,10 @@ export default function CesiumViewer({
     const sv = streetViewRef.current
     if (!sv) return
     if (mode === 'street' && streetPosition) sv.goTo(streetPosition, eyeHeightRef.current)
-    else if (mode === 'aerial') sv.exit()
+    else if (mode === 'aerial') {
+      sv.exit()
+      staffRef.current?.clear()
+    }
   }, [mode, streetPosition])
 
   useEffect(() => {
@@ -236,6 +254,35 @@ export default function CesiumViewer({
     else if (tourState === 'paused') tour.pause()
     else tour.stop()
   }, [tourState])
+
+  // Water marks on flooded buildings (built once, on first use)
+  useEffect(() => {
+    const viewer = viewerRef.current
+    if (!viewer || !buildingsRef.current) return
+    if (waterMarksRef.current) {
+      waterMarksRef.current.show = showWaterMarks
+      return
+    }
+    if (!showWaterMarks) return
+    let cancelled = false
+    addWaterMarks(viewer, buildingsRef.current)
+      .then((source) => {
+        if (!source || viewer.isDestroyed()) return
+        if (cancelled) return viewer.dataSources.remove(source, true)
+        waterMarksRef.current = source
+      })
+      .catch((e) => console.error('Water marks failed:', e?.message ?? e))
+    return () => {
+      cancelled = true
+    }
+  }, [showWaterMarks, buildingsReady])
+
+  // "Replay flooding": each new token starts the animation again
+  useEffect(() => {
+    const viewer = viewerRef.current
+    if (!viewer || !replayToken || !waterRef.current) return
+    return replayFlooding(viewer, waterRef.current)
+  }, [replayToken, waterStatus])
 
   // Keep the 3D highlight in sync with the selection in App
   useEffect(() => {

@@ -64,6 +64,7 @@ export default function StatsPanel({
   basemap,
   onBasemapChange,
   basemaps,
+  onReplay,
   street,
   error,
 }) {
@@ -103,7 +104,7 @@ export default function StatsPanel({
       </section>
 
       <Controls layers={layers} onChange={onLayersChange} basemap={basemap}
-        onBasemapChange={onBasemapChange} basemaps={basemaps} />
+        onBasemapChange={onBasemapChange} basemaps={basemaps} onReplay={onReplay} />
 
       {!building && <p className="hint">Click a building to see its flood depth.</p>}
     </aside>

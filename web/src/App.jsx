@@ -13,13 +13,20 @@ export default function App() {
   const [overlay, setOverlay] = useState(null)
   const [grid, setGrid] = useState(null)
   const [building, setBuilding] = useState(null)
-  const [layers, setLayers] = useState({ showWater: true, animateWater: true, colorWaterByDepth: true, showDepthColors: false })
+  const [layers, setLayers] = useState({
+    showWater: true,
+    animateWater: true,
+    colorWaterByDepth: true,
+    showDepthColors: false,
+    showWaterMarks: false,
+  })
   const [mode, setMode] = useState('aerial') // 'aerial' | 'picking' | 'street'
   const [streetPosition, setStreetPosition] = useState(null)
   const [eyeHeight, setEyeHeight] = useState(1.7)
   const [heading, setHeading] = useState(0)
   const [basemap, setBasemap] = useState('satellite')
   const [tourState, setTourState] = useState('off') // 'off' | 'playing' | 'paused'
+  const [replayToken, setReplayToken] = useState(0)
   const [error, setError] = useState(null)
 
   // Load the prepared data (served from data/processed by vite.config.js)
@@ -83,6 +90,7 @@ export default function App() {
         basemap={basemap}
         onBasemapChange={setBasemap}
         basemaps={BASEMAPS}
+        onReplay={() => setReplayToken((t) => t + 1)}
         street={
           mode === 'street'
             ? { depth: depthHere, eyeHeight, onEyeHeightChange: setEyeHeight, onExit: exitStreetView }
@@ -112,6 +120,8 @@ export default function App() {
               basemap={basemap}
               tourState={tourState}
               onTourEnd={() => setTourState('off')}
+              showWaterMarks={layers.showWaterMarks}
+              replayToken={replayToken}
             />
             {underwater && (
               <div className="underwater" aria-hidden="true">

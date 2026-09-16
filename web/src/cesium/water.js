@@ -235,3 +235,31 @@ export async function addWaterSurface(viewer, grid, legend, colorByDepth = true)
   )
   return primitive
 }
+
+/**
+ * "Replay flooding": drop the water surface below ground, then raise it back to its
+ * true level. The mesh is one object, so the whole flood rises together.
+ */
+export function replayFlooding(viewer, water, { dropM = 4, durationS = 4 } = {}) {
+  if (!water) return () => {}
+  const up = Cesium.Ellipsoid.WGS84.geodeticSurfaceNormal(
+    viewer.camera.positionWC,
+    new Cesium.Cartesian3(),
+  )
+  const start = performance.now()
+  const tick = () => {
+    const t = Math.min(1, (performance.now() - start) / (durationS * 1000))
+    const eased = t * t * (3 - 2 * t) // smooth start and finish
+    const offset = -dropM * (1 - eased)
+    water.modelMatrix = offset
+      ? Cesium.Matrix4.fromTranslation(Cesium.Cartesian3.multiplyByScalar(up, offset, new Cesium.Cartesian3()))
+      : Cesium.Matrix4.IDENTITY.clone()
+    if (t >= 1) stop()
+  }
+  const stop = () => {
+    viewer.scene.preRender.removeEventListener(tick)
+    if (!viewer.isDestroyed()) water.modelMatrix = Cesium.Matrix4.IDENTITY.clone()
+  }
+  viewer.scene.preRender.addEventListener(tick)
+  return stop
+}

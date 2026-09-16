@@ -175,6 +175,9 @@
   cursor: pointer;
 }
 
+.btn-small.replay { margin-top: 0.6rem; padding: 0.3rem 0.7rem; }
+.btn-small:disabled { opacity: 0.45; cursor: default; }
+
 /* Depth histogram */
 .histogram { margin-top: 0.9rem; }
 .histogram .bars { display: flex; align-items: flex-end; gap: 2px; }

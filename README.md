@@ -9,8 +9,17 @@ and raise your viewpoint from a child's height to a rooftop.
 
 Study area: a small town in eastern North Carolina (~322 acres inundated, 200 buildings).
 
-![Aerial view](docs/aerial.png)
-![Street view](docs/street.png)
+![Aerial view: depth-coloured water, 3D buildings and the stats panel](docs/aerial.png)
+
+*Aerial view — the water surface carries the depth colours; red buildings are flooded, orange are dry.*
+
+![Street view at eye level, standing in knee-deep water](docs/street.png)
+
+*Street view — standing in 2.8 ft of water, with the water-line gauge and minimap.*
+
+![Bird's-eye fly-through following the flood channel](docs/flyover.png)
+
+*Fly-through — the tour follows the deep channel across the study area.*
 
 ---
 
@@ -18,13 +27,16 @@ Study area: a small town in eastern North Carolina (~322 acres inundated, 200 bu
 
 - **3D flood surface** — an animated water mesh built at *ground + depth*, so buildings
   rise out of the water instead of sitting on a painted blue polygon.
-- **Depth colours** — the flood raster draped over the terrain, with a shared legend.
+- **Depth-coloured water** — the water surface *is* the depth map: every point takes its
+  colour from the depth grid, and deeper water is more opaque. The flood raster can also be
+  draped on the ground underneath. Both share one legend.
 - **Buildings in 3D** — 200 footprints extruded to estimated heights; red = flooded,
   orange = dry. Click one for its depth, height and year built.
 - **Street view** — stand anywhere, drag to look around, click the ground to walk,
   and slide your eye height from 0.5 m to 30 m.
 - **Water-line gauge** — shows where the water would reach on a standing adult
-  ("knee-deep", "chest-deep") and whether your eye is below the surface.
+  ("knee-deep", "chest-deep"), and marks the view as underwater when your eye drops below
+  the surface.
 - **Bird's-eye fly-through** — a smooth tour that follows the flood channel at ~120 m,
   banking into turns. The path is derived from the deepest raster cells, not hand-drawn.
 - **Base maps** — satellite, satellite with labels, OpenStreetMap or plain terrain.
@@ -89,6 +101,26 @@ Terrain rather than to absolute elevations. This avoids mixing vertical datums
 (NAVD88 vs WGS84 ellipsoid, ~35 m apart in North Carolina) and removes the need for a
 custom DEM. Because Cesium's terrain is coarser than the model's DEM, the computed
 water surface is lightly smoothed so it reads as flat water.
+
+## How a few parts work
+
+**The water surface** is a mesh, not a flat polygon. Each grid point is placed at
+*Cesium's ground height + depth*, so the surface follows the terrain. Because Cesium's
+terrain is not the model's DEM, the result is lightly smoothed to read as flat water, and
+dry points at the edge are pushed below ground so the terrain cuts a natural shoreline.
+Its colour comes from a texture painted from the depth grid at load time, sampled by a
+custom version of Cesium's water shader — so ripples, reflections and depth colours are
+the same surface.
+
+**Street view** disables Cesium's normal camera controls and drives the camera directly:
+stand at ground + eye height, drag to turn, click the ground to walk. Cesium does not draw
+the water surface from below, so when your eye goes under the water line the view is tinted
+and labelled rather than appearing dry.
+
+**The fly-through path** is derived from the data: the cells deeper than a share of the
+maximum are projected onto their principal axis (the direction the channel runs), and the
+median position of each slice becomes a waypoint. The camera follows a Catmull-Rom spline
+through those points and banks into the turns.
 
 ## Project layout
 
