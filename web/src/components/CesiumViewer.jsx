@@ -94,8 +94,11 @@ export default function CesiumViewer({
     })
     // Hide anything below the ground (e.g. the water mesh's dry edges)
     viewer.scene.globe.depthTestAgainstTerrain = true
-    // Star field: only visible from space, and its textures aren't shipped (see vite.config.js)
+    // Star field, sun and moon: only visible from space, and their assets aren't shipped
+    // (see vite.config.js). The sun/moon also pull in Earth-orientation data we don't need.
     viewer.scene.skyBox.show = false
+    viewer.scene.sun.show = false
+    viewer.scene.moon.show = false
     viewerRef.current = viewer
 
     addBuildings(viewer).then((source) => {

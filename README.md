@@ -7,6 +7,8 @@ predicted flood depth raster and building footprints as a georeferenced 3D scene
 in the browser, then lets you drop into any spot at eye level, look around 360°,
 and raise your viewpoint from a child's height to a rooftop.
 
+**Live: [streetscape-topaz.vercel.app](https://streetscape-topaz.vercel.app/)**
+
 Study area: **Hanchey Store, eastern North Carolina** (~322 acres inundated, 200 buildings).
 
 ![Aerial view: depth-coloured water, 3D buildings and the stats panel](docs/aerial.png)
@@ -133,6 +135,43 @@ and labelled rather than appearing dry.
 maximum are projected onto their principal axis (the direction the channel runs), and the
 median position of each slice becomes a waypoint. The camera follows a Catmull-Rom spline
 through those points and banks into the turns.
+
+## Deployment
+
+Live at **[streetscape-topaz.vercel.app](https://streetscape-topaz.vercel.app/)**.
+
+The site is static: `npm run build` in `web/` produces `web/dist`, about 12 MB in 194 files,
+and every push to `main` redeploys it.
+
+| Vercel setting | Value |
+|---|---|
+| Root Directory | `web` (the app is not at the repo root) |
+| Build command | `npm run build` |
+| Output directory | `dist` |
+| Environment variable | `VITE_CESIUM_TOKEN` |
+
+Two things that are easy to trip over:
+
+- **Deployment Protection** is on for new Vercel projects. Until it is disabled, every request
+  redirects to a Vercel login page, so the site looks broken to everyone but you.
+- `VITE_CESIUM_TOKEN` is baked in **at build time**. Changing it requires a redeploy, not just
+  saving the variable.
+
+**About the token.** Vite writes the token into the JavaScript bundle, where anyone can read
+it, so the token itself is restricted in the Cesium ion dashboard:
+
+- scope `assets:read` only
+- limited to the three assets this app requests: **1** (Cesium World Terrain), **2** (Bing Maps
+  Aerial) and **3** (Bing Maps Aerial with Labels)
+- **Allowed URLs** set to the deployed address, so a copied token is useless anywhere else
+
+OpenStreetMap is the default base map because its tiles do not count against the ion quota;
+terrain still does.
+
+**Payload.** Only the parts of Cesium this app uses are copied into the build (see
+`web/vite.config.js`), which takes it from 16 MB to 12 MB. Because the star field, sun and moon
+assets are no longer shipped, those three are switched off in `CesiumViewer.jsx` - they are
+only visible from space. Re-enabling any of them means restoring their assets in the config.
 
 ## Project layout
 

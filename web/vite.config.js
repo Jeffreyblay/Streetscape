@@ -21,7 +21,6 @@ export default defineConfig({
           'Assets/Images/**/*', // credit logos
           'Assets/approximateTerrainHeights.json', // needed to clamp buildings to terrain
           'Assets/Textures/waterNormals.jpg', // the water surface ripples
-          'Assets/Textures/moonSmall.jpg',
           'Assets/Textures/pin.svg',
         ].map((pattern) => ({
           src: `${cesiumBuild}/${pattern}`,
