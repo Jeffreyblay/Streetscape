@@ -1,19 +1,7 @@
 import Controls from './Controls.jsx'
+import Stat from './Stat.jsx'
 import StreetViewCard from './StreetViewCard.jsx'
 import DepthHistogram from './DepthHistogram.jsx'
-
-// One label-and-number row.
-function Stat({ label, value, unit }) {
-  return (
-    <div className="stat">
-      <span className="stat-label">{label}</span>
-      <span className="stat-value">
-        {value}
-        {unit && <span className="stat-unit"> {unit}</span>}
-      </span>
-    </div>
-  )
-}
 
 // The depth colour bar and the building colour key.
 function DepthLegend({ legend }) {
@@ -38,30 +26,9 @@ function DepthLegend({ legend }) {
   )
 }
 
-// Details for the building you clicked.
-function BuildingCard({ building, onClose }) {
-  const b = building
-  return (
-    <section className="card">
-      <div className="card-head">
-        <h2>Building {b.id}</h2>
-        <button className="close" onClick={onClose} aria-label="Close">×</button>
-      </div>
-      <p className={b.flooded ? 'badge flooded' : 'badge dry'}>{b.flooded ? 'Flooded' : 'Dry'}</p>
-      <Stat label="Max depth at walls" value={b.depthMaxFt.toFixed(1)} unit="ft" />
-      <Stat label="Mean depth (wet part)" value={b.depthMeanFt.toFixed(1)} unit="ft" />
-      <Stat label="Footprint wet" value={b.wetPct.toFixed(0)} unit="%" />
-      <Stat label="Est. height" value={b.heightFt} unit="ft" />
-      <Stat label="Year built" value={b.yearBuilt && b.yearBuilt !== '0' ? b.yearBuilt : '—'} />
-    </section>
-  )
-}
-
 export default function StatsPanel({
   stats,
   overlay,
-  building,
-  onClearBuilding,
   layers,
   onLayersChange,
   basemap,
@@ -78,7 +45,6 @@ export default function StatsPanel({
   return (
     <aside className="panel">
       {street && <StreetViewCard {...street} />}
-      {building && <BuildingCard building={building} onClose={onClearBuilding} />}
 
       <section>
         <h2>Flood summary</h2>
@@ -109,7 +75,7 @@ export default function StatsPanel({
       <Controls layers={layers} onChange={onLayersChange} basemap={basemap}
         onBasemapChange={onBasemapChange} basemaps={basemaps} />
 
-      {!building && <p className="hint">Click a building to see its flood depth.</p>}
+      <p className="hint">Click a building to see its flood depth.</p>
     </aside>
   )
 }

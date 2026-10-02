@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import CesiumViewer from './components/CesiumViewer.jsx'
 import StatsPanel from './components/StatsPanel.jsx'
 import Minimap from './components/Minimap.jsx'
+import BuildingCard from './components/BuildingCard.jsx'
 import { BASEMAPS } from './cesium/layers.js'
 import { EYE_MAX_M } from './components/StreetViewCard.jsx'
 import { depthAt, loadDepthGrid } from './data/depthGrid.js'
@@ -32,6 +33,7 @@ export default function App() {
   const [tourState, setTourState] = useState('off') // 'off' | 'playing' | 'paused'
   const [replayToken, setReplayToken] = useState(0)
   const [autoRaised, setAutoRaised] = useState(false)
+  const popupRef = useRef(null) // Cesium moves this to follow the selected building
   const [error, setError] = useState(null)
 
   // Load the prepared data (served from data/processed by vite.config.js)
@@ -108,8 +110,6 @@ export default function App() {
       <StatsPanel
         stats={stats}
         overlay={overlay}
-        building={building}
-        onClearBuilding={() => setBuilding(null)}
         layers={layers}
         onLayersChange={setLayers}
         basemap={basemap}
@@ -150,9 +150,13 @@ export default function App() {
               basemap={basemap}
               tourState={tourState}
               onTourEnd={() => setTourState('off')}
+              popupRef={popupRef}
               showWaterMarks={layers.showWaterMarks}
               replayToken={replayToken}
             />
+            <div className="popup" ref={popupRef} style={{ visibility: 'hidden' }}>
+              {building && <BuildingCard building={building} onClose={() => setBuilding(null)} />}
+            </div>
             {underwater && (
               <div className="underwater" aria-hidden="true">
                 <span>Underwater — raise your eye height to surface</span>

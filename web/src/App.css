@@ -234,6 +234,39 @@
 .minimap-you .cone { fill: #ffe14d55; }
 .minimap-you .dot { fill: #ffe14d; stroke: #16212c; stroke-width: 1.2; }
 
+/* Building popup: Cesium positions this over the selected building */
+.popup {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 3;
+  width: 230px;
+  will-change: transform;
+}
+.popup .card {
+  margin: 0;
+  background: #16212cf2;
+  border-color: #ffe14d99;
+  box-shadow: 0 6px 20px #0009;
+  backdrop-filter: blur(2px);
+}
+/* little pointer towards the building */
+.popup .card::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: -7px;
+  width: 12px;
+  height: 12px;
+  background: #16212cf2;
+  border-right: 1px solid #ffe14d99;
+  border-bottom: 1px solid #ffe14d99;
+  transform: translateX(-50%) rotate(45deg);
+}
+.popup .card { position: relative; }
+.popup .stat { padding: 0.18rem 0; }
+.popup .stat-value { font-size: 1rem; }
+
 /* Underwater tint: the water surface isn't drawn from below, so show the state */
 .underwater {
   position: absolute;

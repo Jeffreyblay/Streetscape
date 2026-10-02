@@ -22,6 +22,35 @@ function flyToStudyArea(viewer, bounds) {
   })
 }
 
+// Moves the popup to the building's place on screen, or hides it when that is off view.
+function positionPopup(viewer, node, anchor) {
+  if (!node) return
+  if (!anchor) {
+    node.style.visibility = 'hidden'
+    return
+  }
+  const screen = Cesium.SceneTransforms.worldToWindowCoordinates(viewer.scene, anchor)
+  const canvas = viewer.scene.canvas
+  if (!screen || screen.x < 0 || screen.y < 0 || screen.x > canvas.clientWidth || screen.y > canvas.clientHeight) {
+    node.style.visibility = 'hidden'
+    return
+  }
+  // Keep the card on screen even when its building sits near an edge
+  const x = Cesium.Math.clamp(screen.x, node.offsetWidth / 2 + 8, canvas.clientWidth - node.offsetWidth / 2 - 8)
+  const y = Math.max(node.offsetHeight + 12, screen.y)
+  node.style.visibility = 'visible'
+  node.style.transform = `translate(${Math.round(x)}px, ${Math.round(y)}px) translate(-50%, -100%)`
+}
+
+// The point a building's popup hangs from: above its roof, over the middle of its footprint.
+function popupAnchorFor(viewer, entity) {
+  const positions = entity.polygon.hierarchy.getValue().positions
+  const centre = Cesium.Cartographic.fromCartesian(Cesium.BoundingSphere.fromPoints(positions).center)
+  const ground = viewer.scene.globe.getHeight(centre) ?? 0
+  const roof = ground + (entity.polygon.extrudedHeight?.getValue() ?? 0)
+  return Cesium.Cartesian3.fromRadians(centre.longitude, centre.latitude, roof + 1)
+}
+
 // Colours a building: yellow when selected, otherwise red if flooded and orange if dry.
 function setBuildingColor(entity, highlighted) {
   const { flooded } = buildingInfo(entity)
@@ -46,6 +75,7 @@ export default function CesiumViewer({
   basemap = 'satellite',
   tourState = 'off', // 'off' | 'playing' | 'paused'
   onTourEnd,
+  popupRef, // a DOM node Cesium moves to follow the selected building
   showWaterMarks = false,
   replayToken = 0,
 }) {
@@ -58,6 +88,8 @@ export default function CesiumViewer({
   const tourRef = useRef(null)
   const staffRef = useRef(null)
   const waterMarksRef = useRef(null)
+  const popupAnchorRef = useRef(null) // world position the popup is pinned to
+  const popupNodeRef = useRef(null) // the popup element itself, refreshed on every render
   const showDepthColorsRef = useRef(showDepthColors)
   const colorWaterByDepthRef = useRef(colorWaterByDepth)
   const eyeHeightRef = useRef(eyeHeight)
@@ -74,7 +106,8 @@ export default function CesiumViewer({
     onPickRef.current = onPickLocation
     onHeadingRef.current = onHeadingChange
     onTourEndRef.current = onTourEnd
-  }, [onSelectBuilding, onPickLocation, onHeadingChange, onTourEnd])
+    popupNodeRef.current = popupRef?.current ?? null
+  }, [onSelectBuilding, onPickLocation, onHeadingChange, onTourEnd, popupRef])
 
   // Create the viewer and load buildings + water once; destroy on unmount
   useEffect(() => {
@@ -121,7 +154,8 @@ export default function CesiumViewer({
       .then((p) => tour.prepare(p.waypoints))
       .catch((e) => console.error('Tour path failed:', e?.message ?? e))
 
-    // Report the compass heading (rounded) whenever it changes, for the minimap
+    // Report the compass heading (rounded) whenever it changes, for the minimap,
+    // and keep the building popup sitting next to its building.
     let lastHeading = null
     const onRender = () => {
       const deg = Math.round(Cesium.Math.toDegrees(viewer.camera.heading))
@@ -129,6 +163,7 @@ export default function CesiumViewer({
         lastHeading = deg
         onHeadingRef.current?.(deg)
       }
+      positionPopup(viewer, popupNodeRef.current, popupAnchorRef.current)
     }
     viewer.scene.postRender.addEventListener(onRender)
     // Dev-only handle for debugging in the browser console (stripped from production builds)
@@ -297,7 +332,11 @@ export default function CesiumViewer({
     const entity = source.entities.values.find((e) => buildingInfo(e).id === selectedId)
     if (!entity) return
     setBuildingColor(entity, true)
-    return () => setBuildingColor(entity, false)
+    popupAnchorRef.current = popupAnchorFor(viewerRef.current, entity)
+    return () => {
+      setBuildingColor(entity, false)
+      popupAnchorRef.current = null
+    }
   }, [selectedId])
 
   return (
