@@ -16,11 +16,13 @@ import numpy as np
 import rasterio
 from rasterio.warp import transform as warp_transform
 
+from source_crs import depth_crs
+
 ROOT = Path(__file__).resolve().parents[1]
 DEPTH = ROOT / "data" / "raster" / "depth.tif"
 OUT = ROOT / "data" / "processed" / "tour_path.json"
 
-DEEP_PCT = 0.35     # keep cells deeper than this share of max depth
+DEEP_PCT = 0.5      # keep cells deeper than this share of max depth (the channel)
 SLICES = 14         # waypoints along the channel
 MARGIN = 0.06       # extend the path past both ends, as a share of its length
 
@@ -31,7 +33,7 @@ def main():
         depth = src.read(1, masked=True)
         rows, cols = np.nonzero(~depth.mask & (depth.filled(0) > depth.max() * DEEP_PCT))
         xs, ys = rasterio.transform.xy(src.transform, rows, cols)
-        crs = src.crs
+        crs = depth_crs(src)
 
     pts = np.column_stack([xs, ys])
     centre = pts.mean(axis=0)

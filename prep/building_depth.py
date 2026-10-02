@@ -20,6 +20,8 @@ import rasterio
 from rasterio.features import geometry_mask
 from rasterio.mask import mask
 
+from source_crs import depth_crs
+
 ROOT = Path(__file__).resolve().parents[1]
 BUILDINGS = ROOT / "data" / "building_footprint" / "building_footprint_HS.shp"
 DEPTH = ROOT / "data" / "raster" / "depth.tif"
@@ -52,8 +54,9 @@ def main():
     bldgs = gpd.read_file(BUILDINGS)
 
     with rasterio.open(DEPTH) as src:
-        if bldgs.crs != src.crs:
-            bldgs = bldgs.to_crs(src.crs)
+        raster_crs = depth_crs(src)
+        if bldgs.crs != raster_crs:
+            bldgs = bldgs.to_crs(raster_crs)
         stats = [zonal_depth(g, src) for g in bldgs.geometry]
 
     bldgs["depth_max_ft"] = [round(s[0], 2) for s in stats]

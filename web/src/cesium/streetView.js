@@ -27,6 +27,9 @@ export class StreetView {
   async goTo(position, eyeHeight) {
     const viewer = this.viewer
     const id = ++this.requestId
+    // Set it now, not after the await: setEyeHeight may raise us above the water
+    // while the terrain lookup is still in flight, and that must not be lost.
+    this.eyeHeight = eyeHeight
     const provider = await whenTerrainReady(viewer)
     const [carto] = await Cesium.sampleTerrainMostDetailed(provider, [
       Cesium.Cartographic.fromDegrees(position.lon, position.lat),
@@ -35,7 +38,6 @@ export class StreetView {
 
     this.position = position
     this.ground = carto.height ?? 0
-    this.eyeHeight = eyeHeight
 
     const entering = !this.active
     if (entering) this.#enable()
@@ -53,7 +55,7 @@ export class StreetView {
 
   // Raises or lowers your eye height without moving you.
   setEyeHeight(eyeHeight) {
-    this.eyeHeight = eyeHeight
+    this.eyeHeight = eyeHeight // remembered even before the ground height is known
     if (!this.active || this.ground == null) return
     const { camera } = this.viewer
     camera.cancelFlight()

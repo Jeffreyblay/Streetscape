@@ -22,6 +22,8 @@ import rasterio
 from rasterio.transform import from_origin
 from rasterio.warp import Resampling, reproject, transform_bounds
 
+from source_crs import depth_crs
+
 ROOT = Path(__file__).resolve().parents[1]
 DEPTH = ROOT / "data" / "raster" / "depth.tif"
 OUT = ROOT / "data" / "processed" / "depth_grid.json"
@@ -35,7 +37,8 @@ FT_TO_M = 0.3048
 def main():
     """Shrinks the depth raster to a coarse grid the browser can search quickly."""
     with rasterio.open(DEPTH) as src:
-        west, south, east, north = transform_bounds(src.crs, DST_CRS, *src.bounds)
+        src_crs = depth_crs(src)
+        west, south, east, north = transform_bounds(src_crs, DST_CRS, *src.bounds)
 
         # Degrees per cell at this latitude (lon degrees shrink with cos(lat))
         lat_mid = math.radians((south + north) / 2)
@@ -52,7 +55,7 @@ def main():
         mean_depth = np.full((rows, cols), np.nan, dtype="float32")
         reproject(
             source=depth_ft.filled(src.nodata), destination=mean_depth,
-            src_transform=src.transform, src_crs=src.crs, src_nodata=src.nodata,
+            src_transform=src.transform, src_crs=src_crs, src_nodata=src.nodata,
             dst_transform=dst_transform, dst_crs=DST_CRS, dst_nodata=np.nan,
             resampling=Resampling.average)
 
@@ -60,7 +63,7 @@ def main():
         wet_frac = np.zeros((rows, cols), dtype="float32")
         reproject(
             source=wet, destination=wet_frac,
-            src_transform=src.transform, src_crs=src.crs,
+            src_transform=src.transform, src_crs=src_crs,
             dst_transform=dst_transform, dst_crs=DST_CRS,
             resampling=Resampling.average)
 

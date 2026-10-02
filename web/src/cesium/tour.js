@@ -3,9 +3,11 @@ import { whenTerrainReady } from './terrain.js'
 
 const ALTITUDE_M = 120 // above ground
 const PITCH_DEG = -25
-const BANK_MAX_DEG = 12 // roll into turns, like a bird
+const BANK_MAX_DEG = 7 // roll into turns, like a bird
 const SPEED_MPS = 45
-const LOOKAHEAD = 0.015 // fraction of the path used to aim the camera
+const LOOKAHEAD = 0.05 // fraction of the path used to aim the camera
+const TURN_SMOOTHING_S = 1.0 // how quickly heading and bank catch up with the path
+const ROLL_PER_RAD_PER_S = 0.25 // how strongly the bank responds to the turn rate
 
 /**
  * Bird's-eye flight along the flood channel (data/processed/tour_path.json).
@@ -25,6 +27,8 @@ export class Tour {
     this.onEnd = null
     this._tick = null
     this._lastTime = null
+    this._heading = null // smoothed, so wobbles in the path don't shake the view
+    this._roll = 0
   }
 
   /** Sample terrain along the path and build the spline. Call once. */
@@ -65,6 +69,8 @@ export class Tour {
     this.t = this.t >= 1 ? 0 : this.t
     this.playing = true
     this._lastTime = null
+    this._heading = null
+    this._roll = 0
     this._tick = () => this.#frame()
     scene.preRender.addEventListener(this._tick)
   }
@@ -103,29 +109,41 @@ export class Tour {
     this.t += (dt * SPEED_MPS * this.speed) / Math.max(this.length, 1)
     if (this.t >= 1) {
       this.t = 1
-      this.#place(1)
+      this.#place(1, dt)
       this.pause()
       this.onEnd?.()
       return
     }
-    this.#place(this.t)
+    this.#place(this.t, dt)
   }
 
   // Puts the camera at one point along the path, facing forwards and leaning into turns.
-  #place(t) {
+  #place(t, dt = 0) {
     const position = this.spline.evaluate(t)
     const ahead = this.spline.evaluate(Math.min(1, t + LOOKAHEAD))
-    const heading = this.#headingTo(position, ahead)
-    const turn = Cesium.Math.negativePiToPi(heading - (this._lastHeading ?? heading))
-    this._lastHeading = heading
-    const roll = Cesium.Math.clamp(
-      turn * 40,
+    const target = this.#headingTo(position, ahead)
+
+    // Ease towards the heading the path wants instead of snapping to it every frame
+    const blend = dt > 0 ? 1 - Math.exp(-dt / TURN_SMOOTHING_S) : 1
+    const turn = this._heading === null ? 0 : Cesium.Math.negativePiToPi(target - this._heading)
+    this._heading = this._heading === null ? target : this._heading + turn * blend
+
+    // Bank by how fast the heading changes per second, not per frame, so the
+    // lean doesn't jitter with the frame rate
+    const targetRoll = Cesium.Math.clamp(
+      dt > 0 ? (turn * ROLL_PER_RAD_PER_S) / dt : 0,
       -Cesium.Math.toRadians(BANK_MAX_DEG),
       Cesium.Math.toRadians(BANK_MAX_DEG),
     )
+    this._roll += (targetRoll - this._roll) * blend
+
     this.viewer.camera.setView({
       destination: position,
-      orientation: { heading, pitch: Cesium.Math.toRadians(PITCH_DEG), roll },
+      orientation: {
+        heading: this._heading,
+        pitch: Cesium.Math.toRadians(PITCH_DEG),
+        roll: this._roll,
+      },
     })
   }
 

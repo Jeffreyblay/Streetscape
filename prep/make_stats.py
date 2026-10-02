@@ -18,8 +18,8 @@ DEPTH = ROOT / "data" / "raster" / "depth.tif"
 BUILDINGS = ROOT / "data" / "processed" / "buildings.geojson"
 OUT = ROOT / "data" / "processed" / "stats.json"
 
-# Uneven bins: 99% of wet cells are under ~8.4 ft
-BIN_EDGES_FT = [0, 1, 2, 3, 4, 6, 8, 12, 24]
+# Bins follow the depth distribution: most of the flood sits between 3 and 8 ft
+BIN_EDGES_FT = [0, 2, 3, 4, 5, 6, 8, 12, 18]
 SQFT_PER_ACRE = 43_560
 SQFT_TO_M2 = 0.09290304
 

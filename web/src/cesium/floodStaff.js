@@ -3,7 +3,8 @@ import * as Cesium from 'cesium'
 const FT_TO_M = 0.3048
 const BANDS = 12 // 12 ft of staff, in 1 ft bands
 const RADIUS_M = 0.045
-const AHEAD_M = 5 // planted this far in front of the viewer
+const AHEAD_M = 6 // planted this far from the viewer
+const OFFSET_DEG = 18 // ...and this far to the right, so it is not straight in your eyeline
 const LABEL_EVERY_FT = 2
 
 /**
@@ -20,8 +21,8 @@ export class FloodStaff {
   }
 
   /**
-   * Plant the staff `AHEAD_M` in front of a viewer standing at (lon, lat, ground).
-   * Positions are callbacks, so the staff stays ahead of you as you turn.
+   * Plant the staff beside a viewer standing at (lon, lat, ground).
+   * Positions are callbacks, so the staff keeps its place as you turn.
    */
   plant({ lon, lat, ground }) {
     this.source.entities.removeAll()
@@ -63,15 +64,15 @@ export class FloodStaff {
   }
 
   /**
-   * A point AHEAD_M in front of the camera, at the given height. Anchored to the
-   * camera itself (not the clicked point) so the staff is always dead ahead.
+   * A point AHEAD_M away and OFFSET_DEG to the right of where the camera looks, at the
+   * given height. Anchored to the camera itself so it keeps that position as you turn.
    */
   #pointAhead(height) {
     const { camera } = this.viewer
     const eye = Cesium.Cartographic.fromCartesian(camera.positionWC)
     const lon = Cesium.Math.toDegrees(eye.longitude)
     const lat = Cesium.Math.toDegrees(eye.latitude)
-    const heading = camera.heading
+    const heading = camera.heading + Cesium.Math.toRadians(OFFSET_DEG)
     const metresPerDegLat = 111_320
     const metresPerDegLon = metresPerDegLat * Math.cos(Cesium.Math.toRadians(lat))
     return Cesium.Cartesian3.fromDegrees(

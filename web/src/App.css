@@ -159,6 +159,7 @@
 .gauge-label.water { fill: #7cc0ee; }
 .gauge-label.eye { fill: #ffe14d; }
 .warn { color: var(--danger); font-size: 0.8rem; margin: 0.25rem 0; }
+.note { color: var(--accent); font-size: 0.78rem; margin: 0.25rem 0; line-height: 1.4; }
 .slider { display: block; margin-top: 0.5rem; font-size: 0.8rem; color: var(--muted); }
 .slider strong { color: var(--text); }
 .slider input { width: 100%; accent-color: var(--accent); margin-top: 0.3rem; }

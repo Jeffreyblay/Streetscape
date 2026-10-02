@@ -16,6 +16,8 @@ import rasterio
 from PIL import Image
 from rasterio.warp import Resampling, calculate_default_transform, reproject
 
+from source_crs import depth_crs
+
 ROOT = Path(__file__).resolve().parents[1]
 DEPTH = ROOT / "data" / "raster" / "depth.tif"
 OUT_DIR = ROOT / "data" / "processed"
@@ -24,22 +26,22 @@ DST_CRS = "EPSG:4326"
 # Colour ramp stops: (depth_ft, (R, G, B, A)). Colours are interpolated between stops.
 RAMP = [
     (0.0,  (198, 236, 250, 140)),   # very shallow - light cyan, most transparent
-    (1.0,  (120, 198, 235, 160)),
-    (2.0,  (58, 150, 214, 175)),
-    (4.0,  (30, 100, 180, 190)),
+    (2.0,  (120, 198, 235, 160)),
+    (4.0,  (58, 150, 214, 175)),
+    (6.0,  (30, 100, 180, 190)),
     (8.0,  (18, 60, 140, 205)),
-    (24.0, (8, 29, 88, 220)),       # channel - dark navy, most opaque
+    (18.0, (8, 29, 88, 220)),       # deepest - dark navy, most opaque
 ]
-
 
 def to_wgs84(src):
     """Reproject band 1 to WGS84. Returns (array with NaN for dry, transform)."""
+    src_crs = depth_crs(src)
     transform, width, height = calculate_default_transform(
-        src.crs, DST_CRS, src.width, src.height, *src.bounds)
+        src_crs, DST_CRS, src.width, src.height, *src.bounds)
     dst = np.full((height, width), np.nan, dtype="float32")
     reproject(
         source=rasterio.band(src, 1), destination=dst,
-        src_transform=src.transform, src_crs=src.crs, src_nodata=src.nodata,
+        src_transform=src.transform, src_crs=src_crs, src_nodata=src.nodata,
         dst_transform=transform, dst_crs=DST_CRS, dst_nodata=np.nan,
         resampling=Resampling.bilinear)
     return dst, transform
