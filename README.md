@@ -2,9 +2,10 @@
 
 **A 3D immersive floodwater depth dashboard with simulated street-level views.**
 
-Streetscape shows what a flood looks like *from where you stand*. It renders a
-predicted flood depth raster and building footprints as a georeferenced 3D scene
-in the browser, then lets you drop into any spot at eye level, look around 360°,
+Streetscape shows what a flood looks like *from where you stand*. It renders a predicted
+flood depth raster — the output of a physics-informed attention U-Net trained on roughly
+97 million labelled pixels at 1 m resolution — and building footprints as a georeferenced
+3D scene in the browser, then lets you drop into any spot at eye level, look around 360°,
 and raise your viewpoint from a child's height to a rooftop.
 
 **Live: [streetscape-topaz.vercel.app](https://streetscape-topaz.vercel.app/)**
@@ -91,7 +92,7 @@ python prep/make_tour_path.py
 
 | Dataset | Notes |
 |---|---|
-| `data/raster/depth.tif` | Flood depth model output. EPSG:2264 (NC State Plane, US survey feet), 3.125 ft cells, depth in **feet**, 0.01–23.6 ft |
+| `data/raster/depth.tif` | Depth predicted by a physics-informed attention U-Net (trained on ~97 million labelled pixels at 1 m). EPSG:2264 (NC State Plane, US survey feet), 3.125 ft cells, depth in **feet** |
 | `data/building_footprint/` | NC Emergency Management building inventory (`S_BUILDING_FP`, 2020), same CRS |
 
 ### Two decisions worth knowing

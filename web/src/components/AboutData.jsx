@@ -5,10 +5,15 @@ export default function AboutData({ stats }) {
       <summary>About the data</summary>
 
       <p>
-        <strong>Flood depths</strong> come from a hydraulic model raster on a 3.1 ft grid, in
-        NC State Plane feet. Depths shown for a building are measured from that raster inside
-        its footprint; the depth where you stand in street view comes from a 12.5 ft lookup
-        grid, so it is slightly coarser.
+        <strong>Flood depths are predicted by a physics-informed attention U-Net</strong>,
+        trained on roughly 97 million labelled pixels at 1 m resolution. Its output is a depth
+        raster on a 3.1 ft (about 1 m) grid, in NC State Plane feet.
+      </p>
+
+      <p>
+        Depths shown for a building are measured from that raster inside its footprint. The
+        depth where you stand in street view comes from a 12.5 ft lookup grid, so it is
+        slightly coarser.
       </p>
 
       <p>
