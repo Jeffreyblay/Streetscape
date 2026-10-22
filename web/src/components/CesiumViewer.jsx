@@ -5,7 +5,6 @@ import { addBuildings, addFloodOverlay, buildingInfo, setBasemap, BUILDING_COLOR
 import { addWaterSurface, replayFlooding, WATER_ANIMATION_SPEED } from '../cesium/water.js'
 import { StreetView } from '../cesium/streetView.js'
 import { Tour } from '../cesium/tour.js'
-import { FloodStaff } from '../cesium/floodStaff.js'
 import { addWaterMarks } from '../cesium/waterMarks.js'
 import { loadDepthGrid } from '../data/depthGrid.js'
 
@@ -86,7 +85,6 @@ export default function CesiumViewer({
   const overlayLayerRef = useRef(null)
   const streetViewRef = useRef(null)
   const tourRef = useRef(null)
-  const staffRef = useRef(null)
   const waterMarksRef = useRef(null)
   const popupAnchorRef = useRef(null) // world position the popup is pinned to
   const popupNodeRef = useRef(null) // the popup element itself, refreshed on every render
@@ -140,11 +138,7 @@ export default function CesiumViewer({
       setBuildingsReady(true)
     })
 
-    const streetView = new StreetView(viewer)
-    streetViewRef.current = streetView
-    // Plant the depth staff wherever the viewer arrives
-    staffRef.current = new FloodStaff(viewer)
-    streetView.onArrive = (where) => staffRef.current?.plant(where)
+    streetViewRef.current = new StreetView(viewer)
 
     const tour = new Tour(viewer)
     tour.onEnd = () => onTourEndRef.current?.()
@@ -212,8 +206,6 @@ export default function CesiumViewer({
       streetViewRef.current = null
       tourRef.current?.destroy()
       tourRef.current = null
-      staffRef.current?.destroy()
-      staffRef.current = null
       viewer.destroy()
       viewerRef.current = null
       buildingsRef.current = null
@@ -270,10 +262,7 @@ export default function CesiumViewer({
     const sv = streetViewRef.current
     if (!sv) return
     if (mode === 'street' && streetPosition) sv.goTo(streetPosition, eyeHeightRef.current)
-    else if (mode === 'aerial') {
-      sv.exit()
-      staffRef.current?.clear()
-    }
+    else if (mode === 'aerial') sv.exit()
   }, [mode, streetPosition])
 
   useEffect(() => {

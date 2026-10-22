@@ -234,6 +234,42 @@
 .minimap-you .cone { fill: #ffe14d55; }
 .minimap-you .dot { fill: #ffe14d; stroke: #16212c; stroke-width: 1.2; }
 
+/* Acknowledgement: author line and the funder/institution logos */
+.ack { padding-bottom: 0.5rem; }
+.ack-author { margin: 0 0 0.9rem; font-size: 0.85rem; color: var(--muted); }
+.ack-author strong { color: var(--text); font-weight: 600; }
+.ack-caption {
+  margin: 0 0 0.4rem;
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+.ack-logos {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding: 0.7rem 0.75rem;
+  background: #fff;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+}
+.ack-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+.ack-row img { height: 34px; width: auto; max-width: 33%; object-fit: contain; }
+.ack-row img.wide { height: 30px; }
+.ack-host {
+  width: 100%;
+  max-height: 42px;
+  object-fit: contain;
+  border-top: 1px solid #e3e8ee;
+  padding-top: 0.6rem;
+}
+
 /* Building popup: Cesium positions this over the selected building */
 .popup {
   position: absolute;

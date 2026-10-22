@@ -15,10 +15,10 @@ Study area: **Hanchey Store, eastern North Carolina** (~322 acres inundated, 200
 
 *Aerial view — the water surface carries the depth colours; red buildings are flooded, orange are dry.*
 
-![Street view at eye level: the banded flood staff reads just under 3 ft, with water marks on the buildings beyond](docs/street.png)
+![Street view at eye level, looking across the floodwater at submerged buildings](docs/street.png)
 
-*Street view — standing in 2.8 ft of water. The staff reads the depth in the scene, and the
-yellow water marks show where the flood reaches on the buildings across the street.*
+*Street view — standing in 7.8 ft of water. The water is over head height here, so the view
+was raised just above the surface.*
 
 ![Bird's-eye fly-through following the flood channel](docs/flyover.png)
 
@@ -37,12 +37,10 @@ yellow water marks show where the flood reaches on the buildings across the stre
   orange = dry. Click one for its depth, height and year built.
 - **Street view** — stand anywhere, drag to look around, click the ground to walk,
   and slide your eye height from 0.5 m to 30 m.
-- **Flood staff** — a surveyor's depth pole in red and white 1 ft bands stands 5 m ahead of
-  you and follows your view as you turn, so the water level can be read straight off the scene.
 - **Water marks** — a bright line around each flooded building at its own water level, the
   mark a real flood leaves on a wall, so depths can be read across the street at a glance.
 - **Replay flooding** — the water drops below ground and rises back to full depth over four
-  seconds. At eye level you watch it climb the staff.
+  seconds, so you can watch the flood arrive from wherever you are standing.
 - **Water-line gauge** — shows where the water would reach on a standing adult
   ("knee-deep", "chest-deep"), and marks the view as underwater when your eye drops below
   the surface.
@@ -121,8 +119,6 @@ Its colour comes from a texture painted from the depth grid at load time, sample
 custom version of Cesium's water shader — so ripples, reflections and depth colours are
 the same surface.
 
-**The flood staff** is anchored to the camera rather than the ground: every frame its
-position is recomputed 5 m along the current heading, which keeps it centred while you turn.
 The **replay** works because the water is a single mesh — sliding one transform moves the
 whole flood up or down.
 
@@ -183,7 +179,7 @@ data/
 prep/                   Python data preparation scripts
 web/
   src/cesium/           Cesium layers: buildings, overlay, water mesh, street view camera,
-                        flood staff, water marks, fly-through tour
+                        water marks, fly-through tour
   src/components/       React UI: stats panel, controls, street view card, minimap, histogram
   src/data/             depth grid loader and point lookup
 ```
@@ -191,6 +187,14 @@ web/
 ## Tech
 
 CesiumJS · React · Vite · Python (rasterio, GeoPandas) · Cesium ion World Terrain and imagery
+
+## Acknowledgement
+
+Developed by **Dr. Jeffrey Blay**.
+
+Partners and institutions: the **National Science Foundation**, **NASA**, the **National
+Oceanic and Atmospheric Administration**, and **North Carolina Agricultural and Technical
+State University**.
 
 ## Possible extensions
 

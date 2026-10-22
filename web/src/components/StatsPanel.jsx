@@ -1,3 +1,4 @@
+import Acknowledgement from './Acknowledgement.jsx'
 import Controls from './Controls.jsx'
 import Stat from './Stat.jsx'
 import StreetViewCard from './StreetViewCard.jsx'
@@ -70,12 +71,14 @@ export default function StatsPanel({
           Deepest water against a building {buildings.max_depth_ft.toFixed(1)} ft · shallowest
           mapped {depth_ft.min.toFixed(2)} ft
         </p>
+
+        <p className="hint">Click a building to see its flood depth.</p>
       </section>
 
       <Controls layers={layers} onChange={onLayersChange} basemap={basemap}
         onBasemapChange={onBasemapChange} basemaps={basemaps} />
 
-      <p className="hint">Click a building to see its flood depth.</p>
+      <Acknowledgement />
     </aside>
   )
 }
