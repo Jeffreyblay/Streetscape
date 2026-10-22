@@ -1,3 +1,4 @@
+import AboutData from './AboutData.jsx'
 import Acknowledgement from './Acknowledgement.jsx'
 import Controls from './Controls.jsx'
 import Stat from './Stat.jsx'
@@ -77,6 +78,8 @@ export default function StatsPanel({
 
       <Controls layers={layers} onChange={onLayersChange} basemap={basemap}
         onBasemapChange={onBasemapChange} basemaps={basemaps} />
+
+      <AboutData stats={stats} />
 
       <Acknowledgement />
     </aside>

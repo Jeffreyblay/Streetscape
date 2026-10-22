@@ -234,8 +234,49 @@
 .minimap-you .cone { fill: #ffe14d55; }
 .minimap-you .dot { fill: #ffe14d; stroke: #16212c; stroke-width: 1.2; }
 
+/* About the data: collapsed provenance and caveats */
+.about {
+  margin-top: 1.25rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--border);
+  font-size: 0.78rem;
+  color: var(--muted);
+  line-height: 1.5;
+}
+.about summary {
+  cursor: pointer;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  list-style: none;
+}
+.about summary::-webkit-details-marker { display: none; }
+.about summary::before {
+  content: '';
+  display: inline-block;
+  width: 0;
+  height: 0;
+  margin-right: 0.45rem;
+  border-left: 5px solid currentColor;
+  border-top: 4px solid transparent;
+  border-bottom: 4px solid transparent;
+  transition: transform 0.15s;
+}
+.about[open] summary::before { transform: rotate(90deg); }
+.about summary:hover { color: var(--text); }
+.about p { margin: 0.7rem 0 0; }
+.about strong { color: var(--text); font-weight: 600; }
+.about-note { font-style: italic; opacity: 0.85; }
+
 /* Acknowledgement: author line and the funder/institution logos */
-.ack { padding-bottom: 0.5rem; }
+.ack {
+  margin-top: 1.25rem;
+  padding-top: 1.25rem;
+  padding-bottom: 0.5rem;
+  border-top: 1px solid var(--border);
+}
 .ack-author { margin: 0 0 0.9rem; font-size: 0.85rem; color: var(--muted); }
 .ack-author strong { color: var(--text); font-weight: 600; }
 .ack-caption {

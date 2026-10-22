@@ -210,33 +210,44 @@ export default function CesiumViewer({
       viewerRef.current = null
       buildingsRef.current = null
       waterRef.current = null
+      overlayLayerRef.current = null
     }
   }, [])
 
-  // Overlay metadata arrives after the fetch in App: drape it and fly there
+  // Fly to the study area once we know where it is
+  useEffect(() => {
+    const viewer = viewerRef.current
+    if (viewer && overlay) flyToStudyArea(viewer, overlay.bounds)
+  }, [overlay])
+
+  // The ground overlay is off by default, so its image (over 1 MB) is only
+  // fetched the first time someone actually switches it on.
   useEffect(() => {
     const viewer = viewerRef.current
     if (!viewer || !overlay) return
+    const existing = overlayLayerRef.current
+    if (existing) {
+      existing.show = showDepthColors
+      return
+    }
+    if (!showDepthColors) return
     let cancelled = false
-    addFloodOverlay(viewer, overlay).then((layer) => {
-      if (viewer.isDestroyed()) return
-      if (cancelled) return viewer.imageryLayers.remove(layer)
-      overlayLayerRef.current = layer
-      layer.show = showDepthColorsRef.current
-    })
-    flyToStudyArea(viewer, overlay.bounds)
+    addFloodOverlay(viewer, overlay)
+      .then((layer) => {
+        if (!layer || viewer.isDestroyed()) return
+        if (cancelled) return viewer.imageryLayers.remove(layer)
+        overlayLayerRef.current = layer
+        layer.show = showDepthColorsRef.current
+      })
+      .catch((e) => console.error('Flood overlay failed:', e?.message ?? e))
     return () => {
       cancelled = true
-      const layer = overlayLayerRef.current
-      if (layer && !viewer.isDestroyed()) viewer.imageryLayers.remove(layer)
-      overlayLayerRef.current = null
     }
-  }, [overlay])
+  }, [overlay, showDepthColors])
 
   // Layer toggles
   useEffect(() => {
     showDepthColorsRef.current = showDepthColors
-    if (overlayLayerRef.current) overlayLayerRef.current.show = showDepthColors
   }, [showDepthColors])
 
   useEffect(() => {
